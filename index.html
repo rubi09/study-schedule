@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>東大理一 学習スケジュール</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d12;--surface:#13131e;--surface2:#1a1a28;--border:#22223a;
+  --text:#e8e8f2;--muted:#55556a;--dim:#2a2a40;
+  --accent:#f0c040;--accent2:#ff6b35;
+  --math:#4a9eff;--phys:#ff6b9d;--chem:#4adebb;--eng:#a78bfa;
+  --exam:#f87171;--event:#fbbf24;--done:#4ade80;
+  --tetsu:#ff6b35;--takeda:#a78bfa;
+}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;padding:16px 14px 100px;max-width:580px;margin:0 auto}
+
+/* header */
+.hd{margin-bottom:18px;display:flex;align-items:flex-end;justify-content:space-between}
+.hd-left h1{font-family:'Bebas Neue',cursive;font-size:30px;letter-spacing:4px;color:var(--accent);line-height:1}
+.hd-left p{font-size:10px;color:var(--muted);letter-spacing:.1em;margin-top:3px}
+.hd-right{font-size:11px;color:var(--muted);text-align:right}
+.hd-right strong{color:var(--accent);font-size:14px;display:block}
+
+/* global progress */
+.prog-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
+.prog-track{height:5px;background:var(--dim);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:3px;transition:width .35s}
+
+/* phase tabs */
+.phase-tabs{display:flex;gap:5px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.phase-tabs::-webkit-scrollbar{display:none}
+.ptab{padding:5px 11px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);white-space:nowrap;transition:all .15s}
+.ptab.active{background:var(--accent);color:#0d0d12;border-color:var(--accent)}
+.ptab:hover:not(.active){background:var(--surface2);color:var(--text)}
+
+/* phase panel */
+.pphase{display:none}.pphase.active{display:block}
+
+/* week header */
+.week-hd{margin-bottom:10px;margin-top:4px}
+.week-hd-title{font-family:'Bebas Neue',cursive;font-size:15px;letter-spacing:2px;color:var(--accent2);margin-bottom:5px}
+.week-hd-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+
+/* day card */
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.day-hd{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.day-hd:hover{background:var(--surface2)}
+.day-left{display:flex;align-items:center;gap:8px}
+.day-label{font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;line-height:1}
+.day-label.weekend{color:var(--accent)}
+.day-label.weekday{color:var(--text)}
+.day-label.holiday{color:var(--exam)}
+.day-date{font-size:11px;color:var(--muted)}
+.day-right{display:flex;align-items:center;gap:8px}
+.day-prog{font-size:10px;color:var(--muted)}
+.day-chevron{font-size:12px;color:var(--muted);transition:transform .2s}
+.day-card.open .day-chevron{transform:rotate(180deg)}
+.day-body{display:none;padding:0 12px 12px}
+.day-card.open .day-body{display:block}
+
+/* section within day */
+.dsec{margin-top:8px}
+.dsec-title{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding-bottom:4px;border-bottom:1px solid var(--border);margin-bottom:6px}
+
+/* todo */
+.todo{display:flex;align-items:flex-start;gap:9px;padding:6px 4px;border-radius:7px;cursor:pointer;transition:background .1s;-webkit-tap-highlight-color:transparent}
+.todo:hover{background:var(--surface2)}
+.todo.checked{opacity:.4}
+.todo.checked .todo-text{text-decoration:line-through;color:var(--muted)}
+.cb{width:17px;height:17px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.todo.checked .cb{background:var(--done);border-color:var(--done)}
+.cb-check{display:none;color:#0d0d12;font-size:10px;font-weight:900}
+.todo.checked .cb-check{display:block}
+.todo-left{display:flex;flex-direction:column;gap:2px;flex:1}
+.todo-text{font-size:12.5px;line-height:1.45}
+.todo-sub{font-size:10.5px;color:var(--muted)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.dot.math{background:var(--math)}.dot.phys{background:var(--phys)}.dot.chem{background:var(--chem)}
+.dot.eng{background:var(--eng)}.dot.exam{background:var(--exam)}.dot.event{background:var(--event)}
+.dot.tetsu{background:var(--tetsu)}.dot.takeda{background:var(--takeda)}.dot.free{background:var(--done)}
+.dot.misc{background:var(--muted)}
+
+/* badge */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.02em}
+.badge.exam{background:rgba(248,113,113,.18);color:var(--exam);border:1px solid rgba(248,113,113,.35)}
+.badge.event{background:rgba(251,191,36,.15);color:var(--event);border:1px solid rgba(251,191,36,.3)}
+.badge.tetsu{background:rgba(255,107,53,.15);color:var(--tetsu);border:1px solid rgba(255,107,53,.3)}
+.badge.takeda{background:rgba(167,139,250,.15);color:var(--takeda);border:1px solid rgba(167,139,250,.3)}
+.badge.free{background:rgba(74,222,128,.12);color:var(--done);border:1px solid rgba(74,222,128,.25)}
+
+/* alert box */
+.alert{background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:9px 12px;margin-bottom:10px;font-size:11.5px;line-height:1.7;color:var(--muted)}
+.alert strong{color:var(--text)}
+
+.div{height:1px;background:var(--border);margin:5px 0}
+
+/* day progress bar — sits BELOW the header, outside click zone */
+.day-prog-bar{height:3px;background:var(--dim);border-radius:0 0 0 0;overflow:hidden;flex-shrink:0}
+.day-prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--done));transition:width .35s;border-radius:2px}
+.day-prog{font-size:10px;color:var(--muted);min-width:28px;text-align:right}
+
+/* week (phase) progress bar */
+.phase-prog-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 13px;margin-bottom:12px}
+.phase-prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.phase-prog-label{font-size:10px;color:var(--muted);letter-spacing:.05em}
+.phase-prog-nums{font-size:11px;font-weight:700;color:var(--accent)}
+.phase-prog-track{height:6px;background:var(--dim);border-radius:3px;overflow:hidden}
+.phase-prog-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:3px;transition:width .4s}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div class="hd-left">
+    <h1>STUDY PLAN</h1>
+    <p>東大理一 ／ 2026年6月〜8月</p>
+  </div>
+  <div class="hd-right">
+    <strong id="hd-pct">0%</strong>
+    <span>全体完了</span>
+  </div>
+</div>
+
+<div class="prog-wrap">
+  <div class="prog-label"><span>全タスク進捗</span><span id="prog-pct-label">0 / 0 完了</span></div>
+  <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+
+<div class="phase-tabs" id="phase-tabs"></div>
+<div id="phase-panels"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+// cat: math/phys/chem/eng/tetsu/takeda/event/exam/free/misc
+// type: weekday/weekend/holiday
+// est: estimated minutes (optional, shown in sub)
+
+// 武田 毎日宿題（共通）
+// 英語：ターゲット1900（501-1900を毎日ローテ）、速読英熟語、Vintage
+// 数学：合格る計算数Ⅲ 39番（毎日）、基礎問題精講（週ペース）、合格る計算1A2B（週3回）
+// ※鉄緑の計算ドリル45枚溜まり問題→6/6武田で先生に相談すること
+
+const PHASES = [
+{
+  id:'p1', label:'6/1〜6/8',
+  tags:[{t:'🔴 化学総復テ 6/3',c:'exam'},{t:'鉄緑 数学・数Ⅲ',c:'tetsu'}],
+  alert:'<strong>最優先：6/3（火）化学総復習テスト。</strong>日曜を化学に全振り。計算ドリル溜まってる6周分を今週から消化スタート（1枚45分×6枚＝約4.5時間分）。当日帰宅後は30分以内で就寝準備。',
+  days:[
+    {
+      id:'d0601', label:'SUN', date:'6/1（日）', type:'weekend',
+      sections:[
+        {title:'☀ 日曜 自習メイン（最重要日）',items:[
+          {cat:'chem',text:'化学 総復テ対策：テキスト例題 Week1〜4 解き直し',sub:'午前中に集中。解けなかった問題にマーク'},
+          {cat:'chem',text:'化学 総復テ対策：テキスト例題 Week5〜7 解き直し',sub:'午後。全例題を自力再現できるかチェック'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 1枚目（約45分）',sub:'化学が終わってから'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 2枚目（約45分）',sub:''},
+          {cat:'eng', text:'ターゲット 100語（電車・スキマ）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0602', label:'MON', date:'6/2（月）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数学（授業日）',items:[
+          {cat:'tetsu',text:'鉄緑 数学 授業',sub:'授業内で「？」な箇所をメモ'},
+          {cat:'tetsu',text:'数学 授業の疑問点 10分で確認（帰宅後）',sub:'22:30以降。それだけやって寝る'},
+        ]},
+        {title:'🌙 通学・スキマ',items:[
+          {cat:'chem',text:'化学 怪しい単元の暗記確認（電車内）',sub:'明日のテスト直前確認'},
+          {cat:'eng', text:'ターゲット 100語',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0603', label:'TUE', date:'6/3（火）🔴', type:'weekday',
+      sections:[
+        {title:'🔴 テスト',items:[
+          {cat:'exam',text:'【鉄緑】化学 総復習テスト（7週分）',sub:'全力。終わったら結果は忘れる'},
+        ]},
+        {title:'📚 鉄緑 物理化学（授業日）',items:[
+          {cat:'tetsu',text:'鉄緑 物理・化学 授業',sub:''},
+          {cat:'tetsu',text:'物理 例題＋指定問題2題（宿題）',sub:'今週中に。木〜日で分散'},
+          {cat:'tetsu',text:'化学 例題＋指定問題2題（宿題）',sub:'今週中に'},
+        ]},
+        {title:'🏫 固定',items:[
+          {cat:'event',text:'プログラミング 〜16:00',sub:''},
+          {cat:'free', text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng', text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0604', label:'WED', date:'6/4（水）', type:'weekday',
+      sections:[
+        {title:'⭐ 水曜 集中日（部活なし）',items:[
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（宿題前半）',sub:'「解けた」ではなく「再現できる」まで'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 3枚目（約45分）',sub:'溜まってる分の消化'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 4枚目（約45分）',sub:''},
+          {cat:'phys',text:'物理 例題 解き直し（力学：7/8総復テ準備スタート）',sub:'今日から力学の例題確認を始める'},
+        ]},
+        {title:'🏫 部活後 17:10〜19:10',items:[
+          {cat:'free',text:'部活（水）17:10〜19:10',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0605', label:'THU', date:'6/5（木）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数Ⅲ（授業日）',items:[
+          {cat:'tetsu',text:'鉄緑 数Ⅲ 授業',sub:''},
+          {cat:'tetsu',text:'数学 宿題：問題集 指定4題（今週分）',sub:'帰宅後は1〜2問だけ。残りは日曜'},
+        ]},
+        {title:'🏫 固定',items:[
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+          {cat:'math',text:'数Ⅲ 授業の疑問点 10分確認（帰宅後）',sub:'22:30以降。それだけ'},
+        ]},
+      ]
+    },
+    {
+      id:'d0606', label:'FRI', date:'6/6（金）', type:'weekday',
+      sections:[
+        {title:'📝 武田（授業日）',items:[
+          {cat:'takeda',text:'武田 英語 授業（宿題もらう）',sub:'英検準1級対策の相談もここで'},
+          {cat:'takeda',text:'武田 数学 授業（復習・補完）',sub:''},
+          {cat:'takeda',text:'武田 宿題（本日分）←内容をメモして管理',sub:''},
+        ]},
+        {title:'🌙 帰宅後（短め）',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+          {cat:'tetsu',text:'数学 確認シリーズ とき直し（今週分）',sub:'30分以内'},
+        ]},
+      ]
+    },
+    {
+      id:'d0607', label:'SAT', date:'6/7（土）🚶', type:'weekend',
+      sections:[
+        {title:'🏫 午前 学校',items:[
+          {cat:'event',text:'学校 午前中',sub:'内職可なら：ターゲット or Vintage'},
+        ]},
+        {title:'🚶 外出予定（午後）',items:[
+          {cat:'event',text:'外出',sub:'移動中はターゲット音声のみ。勉強は無理しない'},
+        ]},
+        {title:'夜（帰宅後・余裕があれば）',items:[
+          {cat:'math',text:'数Ⅲ 計算ドリル 5枚目（約45分）',sub:'余裕があれば'},
+          {cat:'eng',text:'Vintage 文法 1ユニット確認',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0608', label:'SUN', date:'6/8（日）', type:'weekend',
+      sections:[
+        {title:'☀ 日曜 メイン（鉄緑宿題まとめて）',items:[
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（残り分）',sub:'今週のとき直しを完成させる'},
+          {cat:'tetsu',text:'数学 問題集 指定4題（残り分）',sub:''},
+          {cat:'tetsu',text:'数Ⅲ テキスト例題＋練習問題（今週分）',sub:''},
+          {cat:'tetsu',text:'数Ⅲ 問題集 全問（今週分）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 6枚目（約45分）',sub:'今週の溜まってた分、これで完了'},
+          {cat:'tetsu',text:'物理 指定問題2題（宿題完成）',sub:''},
+          {cat:'tetsu',text:'化学 指定問題2題（宿題完成）',sub:''},
+          {cat:'phys',text:'物理 力学 テキスト例題 解き直し（7/8対策）',sub:'週30〜45分で毎週継続'},
+        ]},
+        {title:'英語',items:[
+          {cat:'eng',text:'ターゲット 週まとめ確認（忘れてる語チェック）',sub:''},
+        ]},
+      ]
+    },
+  ]
+},
+{
+  id:'p2', label:'6/9〜6/22',
+  tags:[{t:'物理力学 本格化',c:'phys'},{t:'英検 対策スタート',c:'takeda'}],
+  alert:'化学テストが終わったら<strong>次の目標は7/8 物理力学 総復習テスト</strong>。今週から力学の例題解き直しを本格始動。英検準1級（7/19）の具体的な対策を武田で相談する。計算ドリルは毎週6枚（1枚45分）を週内で分散してこなす。',
+  days:[
+    {
+      id:'d0609', label:'MON', date:'6/9（月）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数学',items:[
+          {cat:'tetsu',text:'鉄緑 数学 授業',sub:''},
+          {cat:'tetsu',text:'授業の疑問点 10分確認（帰宅後）',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0610', label:'TUE', date:'6/10（火）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 物理化学',items:[
+          {cat:'tetsu',text:'鉄緑 物理・化学 授業',sub:''},
+          {cat:'tetsu',text:'物理 例題＋指定問題2題（宿題）',sub:'今週中に'},
+          {cat:'tetsu',text:'化学 例題＋指定問題2題（宿題）',sub:'今週中に'},
+        ]},
+        {title:'🏫 固定',items:[
+          {cat:'event',text:'プログラミング 〜16:00',sub:''},
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0611', label:'WED', date:'6/11（水）', type:'weekday',
+      sections:[
+        {title:'⭐ 水曜 集中日',items:[
+          {cat:'phys',text:'物理 力学 テキスト例題 ×2単元 解き直し',sub:'運動方程式→エネルギー→運動量の順で思考回路を固める'},
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（今週分前半）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 1枚目（45分）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 2枚目（45分）',sub:''},
+        ]},
+        {title:'🏫 部活',items:[
+          {cat:'free',text:'部活（水）17:10〜19:10',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0612', label:'THU', date:'6/12（木）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数Ⅲ',items:[
+          {cat:'tetsu',text:'鉄緑 数Ⅲ 授業',sub:''},
+          {cat:'tetsu',text:'数Ⅲ 授業の疑問点 確認（帰宅後10分）',sub:''},
+        ]},
+        {title:'🏫 固定',items:[
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0613', label:'FRI', date:'6/13（金）', type:'weekday',
+      sections:[
+        {title:'📝 武田',items:[
+          {cat:'takeda',text:'武田 英語・数学 授業',sub:'英検対策の具体的な方針を確認する'},
+          {cat:'takeda',text:'武田 宿題（本日分）←内容メモ',sub:''},
+        ]},
+        {title:'🌙 帰宅後',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+          {cat:'tetsu',text:'数学 確認シリーズ とき直し（今週分）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0614', label:'SAT', date:'6/14（土）🚶', type:'weekend',
+      sections:[
+        {title:'🏫 午前 学校',items:[
+          {cat:'event',text:'学校 午前中',sub:'内職：Vintage or ターゲット確認'},
+        ]},
+        {title:'🚶 外出',items:[
+          {cat:'event',text:'外出（午後）',sub:'移動中はターゲット音声のみ'},
+        ]},
+        {title:'夜',items:[
+          {cat:'math',text:'数Ⅲ 計算ドリル 3枚目（45分）',sub:'余裕があれば'},
+          {cat:'eng',text:'英検：長文1題（形式に慣れる）',sub:'武田で相談後の方針で'},
+        ]},
+      ]
+    },
+    {
+      id:'d0615', label:'SUN', date:'6/15（日）', type:'weekend',
+      sections:[
+        {title:'☀ 日曜 鉄緑宿題まとめ',items:[
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（今週分完成）',sub:''},
+          {cat:'tetsu',text:'数学 問題集 指定4題（今週分）',sub:''},
+          {cat:'tetsu',text:'数Ⅲ テキスト例題＋練習問題',sub:''},
+          {cat:'tetsu',text:'数Ⅲ 問題集 全問',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 4・5・6枚目（各45分）',sub:'午後に分けてこなす。計2時間15分'},
+          {cat:'tetsu',text:'物理 指定問題2題（宿題完成）',sub:''},
+          {cat:'tetsu',text:'化学 指定問題2題（宿題完成）',sub:''},
+        ]},
+        {title:'自習',items:[
+          {cat:'phys',text:'物理 力学 テキスト例題 続き',sub:'週ごとに単元を1つ進める'},
+          {cat:'eng',text:'英検：長文2題 + 武田の英検宿題',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0616', label:'MON', date:'6/16（月）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数学',items:[
+          {cat:'tetsu',text:'鉄緑 数学 授業',sub:''},
+          {cat:'tetsu',text:'疑問点 10分確認（帰宅後）',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 1枚目（45分）',sub:'帰宅後余力あれば'},
+        ]},
+      ]
+    },
+    {
+      id:'d0617', label:'TUE', date:'6/17（火）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 物理化学',items:[
+          {cat:'tetsu',text:'鉄緑 物理・化学 授業',sub:''},
+          {cat:'tetsu',text:'物理 例題＋指定問題2題（宿題）',sub:''},
+          {cat:'tetsu',text:'化学 例題＋指定問題2題（宿題）',sub:''},
+        ]},
+        {title:'🏫 固定',items:[
+          {cat:'event',text:'プログラミング 〜16:00',sub:''},
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0618', label:'WED', date:'6/18（水）', type:'weekday',
+      sections:[
+        {title:'⭐ 水曜 集中日',items:[
+          {cat:'phys',text:'物理 力学 テキスト例題 ×2単元（解き直し）',sub:'7/8まで残り3週。力学の問題集指定問題まで今週中に'},
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（今週分前半）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 2枚目（45分）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 3枚目（45分）',sub:''},
+        ]},
+        {title:'🏫',items:[
+          {cat:'free',text:'部活（水）17:10〜19:10',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0619', label:'THU', date:'6/19（木）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数Ⅲ',items:[
+          {cat:'tetsu',text:'鉄緑 数Ⅲ 授業',sub:''},
+          {cat:'tetsu',text:'疑問点 10分確認（帰宅後）',sub:''},
+        ]},
+        {title:'🏫',items:[
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0620', label:'FRI', date:'6/20（金）', type:'weekday',
+      sections:[
+        {title:'📝 武田',items:[
+          {cat:'takeda',text:'武田 授業（英語・数学）',sub:''},
+          {cat:'takeda',text:'武田 宿題（本日分）←内容メモ',sub:''},
+        ]},
+        {title:'🌙 帰宅後',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+          {cat:'tetsu',text:'数学 確認シリーズ とき直し',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0621', label:'SAT', date:'6/21（土）', type:'weekend',
+      sections:[
+        {title:'🏫 午前 学校',items:[
+          {cat:'event',text:'学校 午前中',sub:'内職：Vintage or ターゲット'},
+        ]},
+        {title:'🌆 午後 19:00〜',items:[
+          {cat:'math',text:'数Ⅲ 計算ドリル 4枚目（45分）',sub:''},
+          {cat:'eng',text:'英検 長文2題（時間計測）',sub:''},
+          {cat:'eng',text:'Vintage 文法 苦手ユニット確認',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0622', label:'SUN', date:'6/22（日）', type:'weekend',
+      sections:[
+        {title:'☀ 日曜 メイン',items:[
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（今週分完成）',sub:''},
+          {cat:'tetsu',text:'数学 問題集 指定4題',sub:''},
+          {cat:'tetsu',text:'数Ⅲ テキスト例題＋練習問題',sub:''},
+          {cat:'tetsu',text:'数Ⅲ 問題集 全問',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 5・6枚目（各45分）',sub:'合計1時間30分'},
+          {cat:'tetsu',text:'物理 指定問題2題（宿題完成）',sub:''},
+          {cat:'tetsu',text:'化学 指定問題2題（宿題完成）',sub:''},
+          {cat:'phys',text:'物理 力学 問題集 指定問題（7/8対策）',sub:'テキスト例題が終わった範囲から'},
+        ]},
+        {title:'英語',items:[
+          {cat:'eng',text:'英検 長文2題 + 武田宿題',sub:''},
+        ]},
+      ]
+    },
+  ]
+},
+{
+  id:'p3', label:'6/23〜7/3',
+  tags:[{t:'物理 直前仕上げ',c:'phys'},{t:'期末テスト判断',c:'event'}],
+  alert:'物理総復テまで<strong>残り2週</strong>。力学の例題→問題集を全単元回す。期末（7/4〜9）：東大理一志望なら推薦不使用の判断なら最低限でOK。物理・化学の定期テストだけは総復テと範囲が被るので自然に対策になる。',
+  days:[
+    {
+      id:'d0623', label:'MON', date:'6/23（月）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数学',items:[
+          {cat:'tetsu',text:'鉄緑 数学 授業',sub:''},
+          {cat:'tetsu',text:'疑問点 10分確認（帰宅後）',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 1枚目（帰宅後45分）',sub:'余力あれば'},
+        ]},
+      ]
+    },
+    {
+      id:'d0624', label:'TUE', date:'6/24（火）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 物理化学',items:[
+          {cat:'tetsu',text:'鉄緑 物理・化学 授業',sub:''},
+          {cat:'tetsu',text:'物理 例題＋指定問題2題（宿題）',sub:''},
+          {cat:'tetsu',text:'化学 例題＋指定問題2題（宿題）',sub:''},
+        ]},
+        {title:'🏫',items:[
+          {cat:'event',text:'プログラミング 〜16:00',sub:''},
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0625', label:'WED', date:'6/25（水）', type:'weekday',
+      sections:[
+        {title:'⭐ 水曜 集中日（物理ラストスパート）',items:[
+          {cat:'phys',text:'物理 力学 全単元 テキスト例題 総仕上げ',sub:'解けないものを洗い出す'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 2・3枚目（各45分）',sub:''},
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（今週分前半）',sub:''},
+        ]},
+        {title:'🏫',items:[
+          {cat:'free',text:'部活（水）17:10〜19:10',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0626', label:'THU', date:'6/26（木）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数Ⅲ',items:[
+          {cat:'tetsu',text:'鉄緑 数Ⅲ 授業',sub:'極限・微分が範囲→7/17総復テに直結'},
+          {cat:'tetsu',text:'疑問点 10分確認（帰宅後）',sub:''},
+        ]},
+        {title:'🏫',items:[
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0627', label:'FRI', date:'6/27（金）', type:'weekday',
+      sections:[
+        {title:'📝 武田',items:[
+          {cat:'takeda',text:'武田 授業（英語・数学）',sub:''},
+          {cat:'takeda',text:'武田 宿題（本日分）←内容メモ',sub:''},
+        ]},
+        {title:'🌙 帰宅後',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+          {cat:'tetsu',text:'数学 確認シリーズ とき直し',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0628', label:'SAT', date:'6/28（土）', type:'weekend',
+      sections:[
+        {title:'🏫 午前 学校',items:[
+          {cat:'event',text:'学校 午前中',sub:''},
+        ]},
+        {title:'🌆 19:00〜',items:[
+          {cat:'phys',text:'物理 力学 弱点単元 解き直し',sub:'テキスト例題で解けなかったものだけ'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 4枚目（45分）',sub:''},
+          {cat:'eng',text:'英検 長文 or 武田宿題',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0629', label:'SUN', date:'6/29（日）', type:'weekend',
+      sections:[
+        {title:'☀ 日曜 物理力学 総仕上げ',items:[
+          {cat:'phys',text:'物理 力学 テキスト例題 全範囲 通しチェック',sub:'7/8まで残り1週。「公式を導ける」レベルで'},
+          {cat:'phys',text:'物理 力学 問題集 指定問題（鉄緑）',sub:'テキストが終わったら問題集へ'},
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（今週分）',sub:''},
+          {cat:'tetsu',text:'数学 問題集 指定4題',sub:''},
+          {cat:'tetsu',text:'数Ⅲ テキスト例題＋練習問題',sub:''},
+          {cat:'tetsu',text:'数Ⅲ 問題集 全問',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 5・6枚目（各45分）',sub:''},
+          {cat:'tetsu',text:'物理 指定問題2題（宿題完成）',sub:''},
+          {cat:'tetsu',text:'化学 指定問題2題（宿題完成）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0630', label:'MON', date:'6/30（月）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数学',items:[
+          {cat:'tetsu',text:'鉄緑 数学 授業',sub:''},
+          {cat:'tetsu',text:'疑問点 10分確認（帰宅後）',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 1枚目（帰宅後）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0701', label:'TUE', date:'7/1（火）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 物理化学',items:[
+          {cat:'tetsu',text:'鉄緑 物理・化学 授業',sub:''},
+          {cat:'tetsu',text:'物理 例題＋指定問題2題（宿題）',sub:''},
+          {cat:'tetsu',text:'化学 例題＋指定問題2題（宿題）',sub:''},
+        ]},
+        {title:'🏫',items:[
+          {cat:'event',text:'プログラミング 〜16:00',sub:''},
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0702', label:'WED', date:'7/2（水）', type:'weekday',
+      sections:[
+        {title:'⭐ 水曜（期末前週）',items:[
+          {cat:'phys',text:'物理 力学 弱点問題 最終確認（7/8まで残り6日）',sub:'解けなかったやつだけ繰り返す'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 2・3枚目（各45分）',sub:''},
+          {cat:'chem',text:'化学 定期テスト範囲 リードα 確認',sub:'鉄緑と範囲が被る部分は自然に対策できてる'},
+        ]},
+        {title:'🏫',items:[
+          {cat:'free',text:'部活（水）17:10〜19:10',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0703', label:'THU', date:'7/3（木）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数Ⅲ（期末前日）',items:[
+          {cat:'tetsu',text:'鉄緑 数Ⅲ 授業（極限・微分）',sub:'7/17総復テと直結'},
+          {cat:'tetsu',text:'疑問点 確認（帰宅後10分）',sub:''},
+        ]},
+        {title:'🏫',items:[
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 4枚目（帰宅後）',sub:''},
+        ]},
+      ]
+    },
+  ]
+},
+{
+  id:'p4', label:'7/4〜7/19',
+  tags:[{t:'🔴 期末 7/4〜9',c:'event'},{t:'🔴 物理総復テ 7/8',c:'exam'},{t:'🔴 数Ⅲ総復テ 7/17',c:'exam'},{t:'🔴 英検準1 7/19',c:'exam'}],
+  alert:'テスト4連戦。<strong>期末は物理・化学だけ真剣に対応</strong>（鉄緑の総復テと範囲被る）。他は最低限。7/8物理→7/17数Ⅲ→7/19英検の順で切り替える。英検は落ちても1月再受験できるので気負わない。',
+  days:[
+    {
+      id:'d0704', label:'FRI', date:'7/4（金）🏫期末', type:'holiday',
+      sections:[
+        {title:'🏫 期末テスト初日',items:[
+          {cat:'event',text:'期末テスト（科目確認）',sub:'物理・化学は総復テと被るので全力。他は最低限'},
+        ]},
+        {title:'📝 武田',items:[
+          {cat:'takeda',text:'武田 授業',sub:''},
+          {cat:'takeda',text:'武田 宿題（本日分）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0705', label:'SAT', date:'7/5（土）🏫期末', type:'holiday',
+      sections:[
+        {title:'🏫 期末テスト',items:[
+          {cat:'event',text:'期末テスト',sub:''},
+        ]},
+        {title:'🌆 19:00〜',items:[
+          {cat:'phys',text:'物理 力学 最終確認（7/8まで3日）',sub:'解けない問題だけ集中'},
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0706', label:'SUN', date:'7/6（日）', type:'weekend',
+      sections:[
+        {title:'☀ 物理 最終仕上げ',items:[
+          {cat:'phys',text:'物理 力学 テキスト例題 全範囲 通し（最終）',sub:'公式を口で説明できるレベルまで'},
+          {cat:'phys',text:'物理 力学 問題集 指定問題（鉄緑）仕上げ',sub:''},
+          {cat:'tetsu',text:'数学・数Ⅲ 宿題（今週分）',sub:'今週の分を完成させておく'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 2〜3枚（各45分）',sub:''},
+        ]},
+        {title:'英語',items:[
+          {cat:'eng',text:'英検 長文 2題 + 武田宿題',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0707', label:'MON', date:'7/7（月）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数学',items:[
+          {cat:'tetsu',text:'鉄緑 数学 授業',sub:''},
+          {cat:'tetsu',text:'疑問点 10分確認（帰宅後）',sub:''},
+        ]},
+        {title:'🌙 物理前日',items:[
+          {cat:'phys',text:'物理 力学 弱点 最終確認（30分）',sub:'明日が総復テ。余計なことはしない'},
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0708', label:'TUE', date:'7/8（火）🔴', type:'holiday',
+      sections:[
+        {title:'🔴 物理 力学 総復習テスト',items:[
+          {cat:'exam',text:'【鉄緑】物理 力学 総復習テスト 本番',sub:'全力。終わったら引きずらない'},
+        ]},
+        {title:'📚 鉄緑 物理化学（授業）',items:[
+          {cat:'tetsu',text:'鉄緑 物理・化学 授業',sub:'電磁気スタート'},
+          {cat:'tetsu',text:'物理 例題＋指定問題2題（宿題）',sub:'今週から電磁気'},
+          {cat:'tetsu',text:'化学 例題＋指定問題2題（宿題）',sub:''},
+        ]},
+        {title:'🏫',items:[
+          {cat:'event',text:'プログラミング 〜16:00',sub:''},
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0709', label:'WED', date:'7/9（水）🏫期末最終', type:'weekday',
+      sections:[
+        {title:'🏫 期末テスト最終日',items:[
+          {cat:'event',text:'期末テスト（最終）',sub:'これで期末終了'},
+        ]},
+        {title:'⭐ 期末後 集中日',items:[
+          {cat:'math',text:'数Ⅲ 極限・微分 テキスト例題 解き直し（7/17対策スタート）',sub:'期末終了＝数Ⅲ総復テに全振り開始'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 1・2枚目（各45分）',sub:''},
+        ]},
+        {title:'🌙',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0710', label:'THU', date:'7/10（木）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数Ⅲ',items:[
+          {cat:'tetsu',text:'鉄緑 数Ⅲ 授業（極限・微分）',sub:'7/17まで残り1週'},
+          {cat:'tetsu',text:'疑問点 確認（帰宅後10分）',sub:''},
+        ]},
+        {title:'🏫',items:[
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 3枚目（帰宅後）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0711', label:'FRI', date:'7/11（金）', type:'weekday',
+      sections:[
+        {title:'📝 武田',items:[
+          {cat:'takeda',text:'武田 授業（英語・数学）',sub:''},
+          {cat:'takeda',text:'武田 宿題（本日分）',sub:''},
+        ]},
+        {title:'🌙 帰宅後',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 4枚目（帰宅後）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0712', label:'SAT', date:'7/12（土）', type:'weekend',
+      sections:[
+        {title:'🏫 午前 学校',items:[
+          {cat:'event',text:'学校 午前中',sub:'内職：数Ⅲ 計算問題 or ターゲット'},
+        ]},
+        {title:'🌆 19:00〜',items:[
+          {cat:'math',text:'数Ⅲ 極限・微分 計算ドリル 5枚目（45分）',sub:''},
+          {cat:'eng',text:'英検 長文2〜3題（準1級形式）',sub:'7/19まで残り1週'},
+          {cat:'eng',text:'Vintage 文法 弱点ユニット',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0713', label:'SUN', date:'7/13（日）', type:'weekend',
+      sections:[
+        {title:'☀ 数Ⅲ 総復テ ラストスパート',items:[
+          {cat:'math',text:'数Ⅲ 極限・微分 テキスト例題 全範囲 通し',sub:'公式を導けるか確認'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 6枚目（45分）',sub:'今週分完了'},
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（今週分）',sub:''},
+          {cat:'tetsu',text:'数学 問題集 指定4題',sub:''},
+          {cat:'tetsu',text:'数Ⅲ テキスト例題＋練習問題',sub:''},
+          {cat:'tetsu',text:'数Ⅲ 問題集 全問',sub:''},
+          {cat:'tetsu',text:'物理 例題＋指定問題2題（宿題完成）',sub:'電磁気'},
+          {cat:'tetsu',text:'化学 例題＋指定問題2題（宿題完成）',sub:''},
+        ]},
+        {title:'英検直前',items:[
+          {cat:'eng',text:'英検 長文3題 + 語彙確認',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0714', label:'MON', date:'7/14（月）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 数学',items:[
+          {cat:'tetsu',text:'鉄緑 数学 授業',sub:''},
+        ]},
+        {title:'🌙 数Ⅲ前週',items:[
+          {cat:'math',text:'数Ⅲ 極限 苦手問題 最終確認（帰宅後20分）',sub:'7/17まで3日'},
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0715', label:'TUE', date:'7/15（火）', type:'weekday',
+      sections:[
+        {title:'📚 鉄緑 物理化学',items:[
+          {cat:'tetsu',text:'鉄緑 物理・化学 授業',sub:''},
+        ]},
+        {title:'🌙',items:[
+          {cat:'math',text:'数Ⅲ 微分 苦手問題 最終確認（帰宅後20分）',sub:''},
+          {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0716', label:'WED', date:'7/16（水）🔴数Ⅲ前日', type:'weekday',
+      sections:[
+        {title:'⭐ 水曜（数Ⅲ総復テ前日）',items:[
+          {cat:'math',text:'数Ⅲ 極限・微分 全例題 最終通し（2〜3時間）',sub:'解けない問題はメモして明日確認'},
+          {cat:'math',text:'数Ⅲ 計算ドリル 1〜2枚（前日調整）',sub:'重い問題は避ける。感触を確認する程度'},
+        ]},
+        {title:'🏫',items:[
+          {cat:'free',text:'部活（水）17:10〜19:10',sub:''},
+        ]},
+        {title:'🌙',items:[
+          {cat:'eng',text:'ターゲット 確認のみ（軽く）',sub:'英検前日：無理しない'},
+        ]},
+      ]
+    },
+    {
+      id:'d0717', label:'THU', date:'7/17（木）🔴', type:'holiday',
+      sections:[
+        {title:'🔴 数Ⅲ 極限・微分 総復習テスト',items:[
+          {cat:'exam',text:'【鉄緑】数Ⅲ 極限・微分 総復習テスト 本番',sub:'全力。計算ミスに注意'},
+        ]},
+        {title:'📚 鉄緑 数Ⅲ 授業',items:[
+          {cat:'tetsu',text:'鉄緑 数Ⅲ 授業（テスト後）',sub:''},
+        ]},
+        {title:'🏫',items:[
+          {cat:'free',text:'部活 〜17:00',sub:''},
+        ]},
+        {title:'🌙 英検前々日',items:[
+          {cat:'eng',text:'英検 長文2題（最終確認）',sub:''},
+          {cat:'eng',text:'ターゲット 苦手語彙のみ確認',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0718', label:'FRI', date:'7/18（金）英検前日', type:'weekday',
+      sections:[
+        {title:'📝 武田',items:[
+          {cat:'takeda',text:'武田 授業（英語：英検最終対策）',sub:''},
+        ]},
+        {title:'英検前日',items:[
+          {cat:'eng',text:'英検 過去問 1セット（時間計測）',sub:'本番の流れを頭に入れる'},
+          {cat:'eng',text:'ターゲット 苦手100語 最終確認',sub:''},
+          {cat:'misc',text:'持ち物・会場確認',sub:'早寝すること（23時には就寝）'},
+        ]},
+      ]
+    },
+    {
+      id:'d0719', label:'SAT', date:'7/19（土）🔴英検', type:'holiday',
+      sections:[
+        {title:'🔴 英検準1級 本番',items:[
+          {cat:'exam',text:'英検準1級 受験（7/19）',sub:'今の実力で全力。落ちても1月に再受験できる'},
+        ]},
+        {title:'夜（英検後）',items:[
+          {cat:'misc',text:'夏休み初日！明日から夏期講習モードへ切替',sub:'今日はゆっくり休む'},
+        ]},
+      ]
+    },
+  ]
+},
+{
+  id:'p5', label:'7/20〜8/19',
+  tags:[{t:'鉄緑 夏期講習',c:'tetsu'},{t:'旅行 7/29〜8/1',c:'free'},{t:'🔴 校内模試 8/19',c:'exam'}],
+  alert:'夏の本番。<strong>鉄緑 夏期講習（英語A・数学A）</strong>が最優先。8/19 校内模試（数学・英語）で上位50%がクリスマス模試への目標ライン。旅行（7/29〜8/1）は完全休養でOK。旅行後8/2から校内模試モードに入る。',
+  days:[
+    {
+      id:'d0720', label:'SUN', date:'7/20（日）夏期講習1日目', type:'holiday',
+      sections:[
+        {title:'🏫 鉄緑 夏期講習スタート（英語A・数学A）',items:[
+          {cat:'tetsu',text:'英語A 授業（第1回）',sub:'英文和訳・英作文の基礎。予習してから行く'},
+          {cat:'tetsu',text:'数学A 授業（第1回）',sub:'2次関数・三角関数が範囲。基礎の穴を塞ぐ絶好機'},
+        ]},
+        {title:'夜（復習）',items:[
+          {cat:'tetsu',text:'英語A 授業の復習（当日中に）',sub:'例題を自力で再現できるか確認'},
+          {cat:'tetsu',text:'数学A 授業の復習（当日中に）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0721', label:'MON', date:'7/21（月）', type:'weekend',
+      sections:[
+        {title:'📚 鉄緑 通常授業（数学）',items:[
+          {cat:'tetsu',text:'鉄緑 数学 授業',sub:'夏期講習と並行'},
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（宿題）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 1・2枚（各45分）',sub:''},
+        ]},
+        {title:'夏期講習 予習・復習',items:[
+          {cat:'tetsu',text:'数学A 次回予習（30分）',sub:''},
+          {cat:'tetsu',text:'英語A 例文の暗記確認',sub:''},
+        ]},
+        {title:'英語',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0722', label:'TUE', date:'7/22（火）', type:'weekend',
+      sections:[
+        {title:'🏫 鉄緑 夏期講習',items:[
+          {cat:'tetsu',text:'英語A 授業（第2回）',sub:''},
+          {cat:'tetsu',text:'数学A 授業（第2回）',sub:''},
+          {cat:'tetsu',text:'両科目 当日中に復習',sub:''},
+        ]},
+        {title:'📚 鉄緑 通常（物理化学）',items:[
+          {cat:'tetsu',text:'物理 例題＋指定問題2題（宿題）',sub:'電磁気'},
+          {cat:'tetsu',text:'化学 例題＋指定問題2題（宿題）',sub:'無機暗記と並行'},
+        ]},
+        {title:'英語',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+          {cat:'chem',text:'化学 無機暗記 15分（就寝前）',sub:'毎日継続'},
+        ]},
+      ]
+    },
+    {
+      id:'d0723', label:'WED', date:'7/23（水）', type:'weekend',
+      sections:[
+        {title:'⭐ 水曜 集中日',items:[
+          {cat:'tetsu',text:'数学A 弱点単元 復習（夏期講習の内容）',sub:'2〜3時間'},
+          {cat:'tetsu',text:'英語A 英作文 1題（夏期講習の内容）',sub:''},
+          {cat:'tetsu',text:'数学 問題集 指定4題（通常授業宿題）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 3・4枚（各45分）',sub:''},
+        ]},
+        {title:'英語',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+          {cat:'chem',text:'化学 無機暗記 15分',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0724', label:'THU', date:'7/24（木）', type:'weekend',
+      sections:[
+        {title:'🏫 鉄緑 夏期講習',items:[
+          {cat:'tetsu',text:'英語A 授業（第3回）',sub:''},
+          {cat:'tetsu',text:'数学A 授業（第3回）',sub:''},
+          {cat:'tetsu',text:'両科目 当日中に復習',sub:''},
+        ]},
+        {title:'📚 鉄緑 通常（数Ⅲ）',items:[
+          {cat:'tetsu',text:'鉄緑 数Ⅲ 授業',sub:''},
+          {cat:'tetsu',text:'数Ⅲ テキスト例題＋練習問題（宿題）',sub:''},
+        ]},
+        {title:'英語',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+          {cat:'chem',text:'化学 無機暗記 15分',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0725', label:'FRI', date:'7/25（金）', type:'weekend',
+      sections:[
+        {title:'📝 武田',items:[
+          {cat:'takeda',text:'武田 授業（英語・数学）',sub:''},
+          {cat:'takeda',text:'武田 宿題（本日分）',sub:''},
+        ]},
+        {title:'夏期講習 予習',items:[
+          {cat:'tetsu',text:'英語A 次週分 予習（30分）',sub:''},
+          {cat:'tetsu',text:'数学A 次週分 予習（30分）',sub:''},
+        ]},
+        {title:'英語',items:[
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+          {cat:'eng',text:'英語 長文1題（300語、時間計測）',sub:''},
+          {cat:'chem',text:'化学 無機暗記 15分',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0726', label:'SAT', date:'7/26（土）', type:'weekend',
+      sections:[
+        {title:'自習',items:[
+          {cat:'tetsu',text:'数学A 弱点単元 補強（夏期講習内容）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 5枚目（45分）',sub:''},
+          {cat:'tetsu',text:'数学 確認シリーズ とき直し（今週分）',sub:''},
+          {cat:'eng',text:'Vintage 文法 総復習（8/19向け開始）',sub:'2週間放置で72%→85%以上へ'},
+          {cat:'chem',text:'化学 無機暗記 15分',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0727', label:'SUN', date:'7/27（日）', type:'weekend',
+      sections:[
+        {title:'☀ 鉄緑宿題まとめ',items:[
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（今週分完成）',sub:''},
+          {cat:'tetsu',text:'数学 問題集 指定4題（残り分）',sub:''},
+          {cat:'tetsu',text:'数Ⅲ テキスト例題＋練習問題（今週分）',sub:''},
+          {cat:'tetsu',text:'数Ⅲ 問題集 全問',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 6枚目（45分）',sub:'今週分完了'},
+          {cat:'tetsu',text:'物理 例題＋指定問題2題（宿題完成）',sub:'電磁気'},
+          {cat:'tetsu',text:'化学 例題＋指定問題2題（宿題完成）',sub:''},
+        ]},
+        {title:'夏期講習 復習',items:[
+          {cat:'tetsu',text:'英語A 今週の学習内容 総復習',sub:''},
+          {cat:'tetsu',text:'数学A 今週の学習内容 総復習',sub:''},
+        ]},
+        {title:'模試前確認',items:[
+          {cat:'event',text:'7/28 河合共通テスト模試 前日：数学計算のみ確認',sub:'対策は不要。現状把握と割り切る'},
+        ]},
+      ]
+    },
+    {
+      id:'d0728', label:'MON', date:'7/28（月）📊模試', type:'holiday',
+      sections:[
+        {title:'📊 河合 共通テスト模試',items:[
+          {cat:'event',text:'河合共通テスト模試 受験',sub:'現状把握のみ。結果に一喜一憂しない'},
+        ]},
+        {title:'夜',items:[
+          {cat:'misc',text:'明日から旅行！荷物準備',sub:'単語カードだけ持参。あとは完全休養'},
+        ]},
+      ]
+    },
+    {
+      id:'d0729', label:'TUE〜FRI', date:'7/29〜8/1（旅行）✈', type:'free',
+      sections:[
+        {title:'✈ 旅行（完全休養）',items:[
+          {cat:'free',text:'旅行 4日間',sub:'単語カードだけ持参。移動中だけ気が向いたら見る程度でOK'},
+          {cat:'misc',text:'思い切りリフレッシュ',sub:'帰ったらすぐ校内模試モードに入るための充電期間'},
+        ]},
+      ]
+    },
+    {
+      id:'d0802', label:'SUN', date:'8/2（日）校内模試モード開始', type:'weekend',
+      sections:[
+        {title:'☀ 校内模試モード開始（8/19まで17日）',items:[
+          {cat:'math',text:'数学：鉄緑テキスト例題 自力再現チェック（弱点洗い出し）',sub:'「知ってる」→「解ける」へ。解けない問題をリスト化'},
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回（今週分）',sub:''},
+          {cat:'tetsu',text:'数Ⅲ テキスト例題＋練習問題',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 1・2枚（各45分）',sub:''},
+          {cat:'phys',text:'物理 電磁気 テキスト例題（進捗確認）',sub:''},
+          {cat:'chem',text:'化学 無機暗記 15分',sub:''},
+          {cat:'eng',text:'ターゲット 100語',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0803', label:'MON〜FRI', date:'8/3〜8/8（通常週）', type:'weekend',
+      sections:[
+        {title:'📚 鉄緑 通常授業（月・火・木）',items:[
+          {cat:'tetsu',text:'数学 授業（月）+ テキスト例題 ×2回（宿題）',sub:''},
+          {cat:'tetsu',text:'物理・化学 授業（火）+ 例題・指定問題（宿題）',sub:''},
+          {cat:'tetsu',text:'数Ⅲ 授業（木）+ 例題・問題集（宿題）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 週6枚（1枚45分×6）',sub:'月火水木金土に1枚ずつ分散'},
+        ]},
+        {title:'📝 武田（金）',items:[
+          {cat:'takeda',text:'武田 授業（英語：Vintage文法 仕上げ）',sub:'8/19向け：72%→85%以上を目指す'},
+          {cat:'takeda',text:'武田 宿題',sub:''},
+        ]},
+        {title:'自習（毎日継続）',items:[
+          {cat:'math',text:'数学 弱点単元 自力再現（毎日30分）',sub:'校内模試の過去問があれば活用'},
+          {cat:'eng',text:'英語 長文1題 毎日（300語、時間計測）',sub:''},
+          {cat:'eng',text:'Vintage 文法 総復習（毎日1ユニット）',sub:''},
+          {cat:'eng',text:'英作文 1題 毎日（夏期講習で学んだ表現を使う）',sub:''},
+          {cat:'chem',text:'化学 無機暗記 15分（就寝前）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0809', label:'SUN', date:'8/9（日）', type:'weekend',
+      sections:[
+        {title:'☀ 8/19まで残り10日 中間チェック',items:[
+          {cat:'math',text:'数学 鉄緑テキスト 弱点単元 集中演習（3時間）',sub:'今週リストアップした解けない問題を潰す'},
+          {cat:'tetsu',text:'数学・数Ⅲ 宿題まとめ（今週分）',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル（残り分）',sub:''},
+          {cat:'eng',text:'Vintage 文法 弱点ユニット 集中確認',sub:''},
+          {cat:'eng',text:'英語 長文2題 + 英作文2題',sub:''},
+          {cat:'tetsu',text:'物理・化学 宿題まとめ',sub:''},
+          {cat:'chem',text:'化学 無機暗記 まとめ確認',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0810', label:'MON〜SAT', date:'8/10〜8/16（最終週）', type:'weekend',
+      sections:[
+        {title:'📚 鉄緑 宿題（最終週も継続）',items:[
+          {cat:'tetsu',text:'数学 テキスト例題 ×2回 + 問題集4題',sub:''},
+          {cat:'tetsu',text:'数Ⅲ テキスト例題＋問題集',sub:''},
+          {cat:'math',text:'数Ⅲ 計算ドリル 週6枚（1枚45分）',sub:'日付：8/10月,11火,12水,13木,14金,15土'},
+          {cat:'tetsu',text:'物理・化学 例題＋指定問題（宿題）',sub:''},
+        ]},
+        {title:'📊 校内模試 最終仕上げ',items:[
+          {cat:'math',text:'鉄緑 校内模試 過去問（時間計測で解く）',sub:'動画配信があれば活用'},
+          {cat:'eng',text:'Vintage 文法 最終仕上げ（2週間放置で85%以上が目標）',sub:''},
+          {cat:'eng',text:'英文和訳 精読練習（15分/日）',sub:''},
+          {cat:'eng',text:'英作文 毎日1題',sub:'採点基準を意識する'},
+          {cat:'chem',text:'化学 無機暗記 仕上げ確認',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0817', label:'SUN', date:'8/17（日）', type:'weekend',
+      sections:[
+        {title:'☀ 校内模試2日前 最終調整',items:[
+          {cat:'math',text:'数学 弱点問題 最終チェック（2〜3時間）',sub:'新しいことはやらない。今まで解けなかった問題だけ'},
+          {cat:'eng',text:'Vintage 文法 全体確認（苦手ユニットに絞る）',sub:''},
+          {cat:'eng',text:'英語 長文1題（本番感覚で）',sub:''},
+          {cat:'misc',text:'早めに就寝（22:30には寝る）',sub:''},
+        ]},
+      ]
+    },
+    {
+      id:'d0818', label:'MON', date:'8/18（月）校内模試前日', type:'weekend',
+      sections:[
+        {title:'前日',items:[
+          {cat:'math',text:'数Ⅲ 計算ドリル 1枚（軽く感触確認）',sub:'無理な演習は禁止'},
+          {cat:'eng',text:'ターゲット 苦手語彙 確認（30分）',sub:''},
+          {cat:'misc',text:'会場・持ち物確認、早寝（22時台）',sub:'コンディションが全て'},
+        ]},
+      ]
+    },
+    {
+      id:'d0819', label:'TUE', date:'8/19（火）🔴🔴 校内模試', type:'holiday',
+      sections:[
+        {title:'🔴🔴 鉄緑 校内模試（数学・英語）',items:[
+          {cat:'exam',text:'鉄緑 校内模試 本番',sub:'クリスマス模試で上位50%キープが目標。今日の全力を出す'},
+        ]},
+        {title:'終了後',items:[
+          {cat:'misc',text:'お疲れさま！夏の目標達成を確認',sub:'結果は後日。今日はゆっくり休む'},
+        ]},
+      ]
+    },
+  ]
+},
+];
+
+// ─────────────────────────────────────────────
+// STORAGE
+// ─────────────────────────────────────────────
+function sk(did, idx){ return `v2_${did}_${idx}`; }
+function isChk(did, idx){ try{ return localStorage.getItem(sk(did,idx))==='1'; }catch(e){return false;} }
+function setChk(did, idx, v){ try{ localStorage.setItem(sk(did,idx), v?'1':'0'); }catch(e){} }
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+const phaseTabsEl = document.getElementById('phase-tabs');
+const phasePanelsEl = document.getElementById('phase-panels');
+
+function buildAll(){
+  phaseTabsEl.innerHTML='';
+  phasePanelsEl.innerHTML='';
+
+  PHASES.forEach((ph,pi)=>{
+    // phase tab
+    const ptab = document.createElement('button');
+    ptab.className='ptab'+(pi===0?' active':'');
+    ptab.textContent=ph.label;
+    ptab.onclick=()=>{
+      document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.pphase').forEach(p=>p.classList.remove('active'));
+      ptab.classList.add('active');
+      document.getElementById('pp_'+ph.id).classList.add('active');
+    };
+    phaseTabsEl.appendChild(ptab);
+
+    // phase panel
+    const pPanel = document.createElement('div');
+    pPanel.className='pphase'+(pi===0?' active':'');
+    pPanel.id='pp_'+ph.id;
+
+    // week header
+    const whdDiv = document.createElement('div');
+    whdDiv.className='week-hd';
+    whdDiv.innerHTML=`
+      <div class="week-hd-title">${ph.label}</div>
+      <div class="week-hd-tags">${ph.tags.map(t=>`<span class="badge ${t.c}">${t.t}</span>`).join('')}</div>
+    `;
+    pPanel.appendChild(whdDiv);
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className='alert';
+    alertDiv.innerHTML=ph.alert;
+    pPanel.appendChild(alertDiv);
+
+    // ── フェーズ（週）進捗バー ──
+    const phProgWrap = document.createElement('div');
+    phProgWrap.className='phase-prog-wrap';
+    phProgWrap.id='phase-prog-'+ph.id;
+    // 初期値計算
+    let phTotal=0, phDone=0;
+    ph.days.forEach(d=>{
+      let gi2=0;
+      d.sections.forEach(sec=>sec.items.forEach(()=>{
+        phTotal++;
+        if(isChk(d.id,gi2)) phDone++;
+        gi2++;
+      }));
+    });
+    const phPct = phTotal? Math.round(phDone/phTotal*100):0;
+    phProgWrap.innerHTML=`
+      <div class="phase-prog-row">
+        <span class="phase-prog-label">このフェーズの進捗</span>
+        <span class="phase-prog-nums" id="phase-prog-nums-${ph.id}">${phDone} / ${phTotal} タスク（${phPct}%）</span>
+      </div>
+      <div class="phase-prog-track"><div class="phase-prog-fill" id="phase-prog-fill-${ph.id}" style="width:${phPct}%"></div></div>
+    `;
+    pPanel.appendChild(phProgWrap);
+
+    ph.days.forEach(day=>{
+      // 武田 毎日宿題を自動挿入（武田授業日・旅行・模試当日は除外）
+      const skipTakeda = ['d0703','d0704','d0705','d0706','d0708','d0719','d0728','d0729','d0802','d0819'].includes(day.id)
+        || day.id.startsWith('d08') && !['d0802','d0803','d0809','d0810','d0817','d0818','d0819'].includes(day.id);
+
+      // 武田授業日（金）は別セクションがあるので宿題セクションだけ追加
+      const isTakedaClass = ['d0606','d0613','d0620','d0627','d0704','d0711','d0718','d0725'].includes(day.id);
+
+      if(!skipTakeda && !isTakedaClass){
+        // 武田 毎日タスクセクションを末尾に追加
+        const takedaDaily = {
+          title:'📘 武田 毎日タスク',
+          items:[
+            {cat:'eng', text:'ターゲット1900：今日の範囲 100語確認',sub:'501〜1900をローテ。忘れてた語に印をつける'},
+            {cat:'eng', text:'速読英熟語：今日の範囲（2〜3ページ）',sub:'音声も活用'},
+            {cat:'eng', text:'Vintage：今日の章（1〜2章）',sub:'文法→語法の順で'},
+            {cat:'math',text:'合格る計算 数Ⅲ：39番（毎日）',sub:'鉄緑計算ドリルと重複→6/6武田で先生に統合相談'},
+            {cat:'math',text:'合格る計算 1A2B or 基礎問精講（今日の指定分）',sub:'武田の日次表を確認'},
+          ]
+        };
+        day.sections = [...day.sections, takedaDaily];
+      } else if(isTakedaClass){
+        // 武田授業日は宿題受け取り＋毎日タスクの軽量版
+        const takedaClassDay = {
+          title:'📘 武田 毎日タスク（授業日）',
+          items:[
+            {cat:'eng', text:'ターゲット1900：今日の範囲 100語確認',sub:''},
+            {cat:'eng', text:'速読英熟語：今日の範囲',sub:''},
+            {cat:'eng', text:'Vintage：今日の章',sub:''},
+            {cat:'math',text:'合格る計算 数Ⅲ：39番',sub:''},
+            {cat:'takeda',text:'武田 授業後：次回宿題の内容をメモ・確認',sub:'日次スケジュール表と照合する'},
+          ]
+        };
+        day.sections = [...day.sections, takedaClassDay];
+      }
+
+      // count items for this day
+      const total = day.sections.reduce((s,sec)=>s+sec.items.length,0);
+      let done = 0;
+      let globalIdx=0;
+      day.sections.forEach(sec=>sec.items.forEach((_,i)=>{
+        if(isChk(day.id, globalIdx)) done++;
+        globalIdx++;
+      }));
+
+      const card = document.createElement('div');
+      card.className='day-card';
+      if(total>0 && done===total) card.classList.add('open');
+
+      const labelClass = day.type==='weekend'?'weekend':day.type==='holiday'?'holiday':'weekday';
+      const progPct = total? Math.round(done/total*100):0;
+
+      card.innerHTML=`
+        <div class="day-hd">
+          <div class="day-left">
+            <span class="day-label ${labelClass}">${day.label}</span>
+            <span class="day-date">${day.date}</span>
+          </div>
+          <div class="day-right">
+            <span class="day-prog">${done}/${total}</span>
+            <span class="day-chevron">▼</span>
+          </div>
+        </div>
+        <div class="day-prog-bar"><div class="day-prog-bar-fill" style="width:${progPct}%"></div></div>
+        <div class="day-body"></div>
+      `;
+
+      const dayHd = card.querySelector('.day-hd');
+      const dayBody = card.querySelector('.day-body');
+
+      // build sections inside body
+      day.sections.forEach(sec=>{
+        const secDiv = document.createElement('div');
+        secDiv.className='dsec';
+        secDiv.innerHTML=`<div class="dsec-title">${sec.title}</div>`;
+        sec.items.forEach(item=>{
+          const itemDiv = document.createElement('div');
+          // we need a stable index per day
+          itemDiv.dataset.dayid = day.id;
+          secDiv.appendChild(itemDiv);
+        });
+        dayBody.appendChild(secDiv);
+      });
+
+      // now assign indices and bind
+      let gi=0;
+      dayBody.querySelectorAll('.dsec').forEach((secEl,si)=>{
+        const sec = day.sections[si];
+        const itemEls = secEl.querySelectorAll('[data-dayid]');
+        sec.items.forEach((item,ii)=>{
+          const idx = gi++;
+          const chk = isChk(day.id, idx);
+          const el = itemEls[ii];
+          el.className='todo'+(chk?' checked':'');
+          el.innerHTML=`
+            <div class="dot ${item.cat}"></div>
+            <div class="cb"><span class="cb-check">✓</span></div>
+            <div class="todo-left">
+              <span class="todo-text">${item.text}</span>
+              ${item.sub?`<span class="todo-sub">${item.sub}</span>`:''}
+            </div>
+          `;
+          el.onclick=()=>{
+            const now = !el.classList.contains('checked');
+            el.classList.toggle('checked',now);
+            setChk(day.id, idx, now);
+            updateDayProg(card, day);
+            updateGlobalProg();
+          };
+        });
+      });
+
+      dayHd.onclick=(e)=>{
+        if(e.target.closest('.todo')) return;
+        card.classList.toggle('open');
+      };
+
+      pPanel.appendChild(card);
+    });
+
+    phasePanelsEl.appendChild(pPanel);
+  });
+
+  updateGlobalProg();
+}
+
+function updateDayProg(card, day){
+  let total=0, done=0, gi=0;
+  day.sections.forEach(sec=>sec.items.forEach(()=>{
+    total++;
+    if(isChk(day.id,gi)) done++;
+    gi++;
+  }));
+  const pct = total? Math.round(done/total*100):0;
+  card.querySelector('.day-prog').textContent=`${done}/${total}`;
+  const fill = card.querySelector('.day-prog-bar-fill');
+  if(fill) fill.style.width=pct+'%';
+}
+
+function updateGlobalProg(){
+  let total=0,done=0;
+  PHASES.forEach(ph=>{
+    let phTotal=0, phDone=0;
+    ph.days.forEach(day=>{
+      let gi=0;
+      day.sections.forEach(sec=>sec.items.forEach(()=>{
+        total++; phTotal++;
+        if(isChk(day.id,gi)){ done++; phDone++; }
+        gi++;
+      }));
+    });
+    // update phase bar
+    const pct=phTotal?Math.round(phDone/phTotal*100):0;
+    const fill=document.getElementById('phase-prog-fill-'+ph.id);
+    const nums=document.getElementById('phase-prog-nums-'+ph.id);
+    if(fill) fill.style.width=pct+'%';
+    if(nums) nums.textContent=`${phDone} / ${phTotal} タスク（${pct}%）`;
+  });
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct-label').textContent=`${done} / ${total} 完了`;
+  document.getElementById('hd-pct').textContent=pct+'%';
+}
+
+buildAll();
+</script>
+</body>
+</html>
