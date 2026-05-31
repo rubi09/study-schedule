@@ -113,8 +113,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 </style>
 </head>
 <body>
-<div style="background: #1a1a28; padding: 15px; text-align: center; border-bottom: 1px solid #22223a;">
-  <a href="progress.html" style="color: #f0c040; font-weight: bold; text-decoration: none; font-size: 16px;">
+
+<div style="background:#1a1a28;padding:15px;text-align:center;border-bottom:1px solid #22223a;margin:-16px -14px 16px;">
+  <a href="progress.html" style="color:#f0c040;font-weight:bold;text-decoration:none;font-size:16px;">
     📈 勉強進捗アプリへ移動
   </a>
 </div>
@@ -160,11 +161,12 @@ const PHASES = [
       id:'d0601', label:'SUN', date:'6/1（日）', type:'weekend',
       sections:[
         {title:'☀ 日曜 自習メイン（最重要日）',items:[
-          {cat:'chem',text:'化学 総復テ対策：テキスト例題 Week1〜4 解き直し',sub:'午前中に集中。解けなかった問題にマーク'},
-          {cat:'chem',text:'化学 総復テ対策：テキスト例題 Week5〜7 解き直し',sub:'午後。全例題を自力再現できるかチェック'},
-          {cat:'math',text:'数Ⅲ 計算ドリル 1枚目（約45分）',sub:'化学が終わってから'},
-          {cat:'math',text:'数Ⅲ 計算ドリル 2枚目（約45分）',sub:''},
-          {cat:'eng', text:'ターゲット 100語（電車・スキマ）',sub:''},
+          {cat:'chem',text:'化学 先週分：テキスト例題 Week1〜4 解き直し',sub:'午前中に集中。解けなかった問題にマーク'},
+          {cat:'chem',text:'化学 先週分：テキスト例題 Week5〜7 解き直し',sub:'午後。全例題を自力再現できるかチェック'},
+          {cat:'chem',text:'化学 先週分：指定問題2題',sub:''},
+          {cat:'tetsu',text:'数学 先週分：テキスト例題 1回目',sub:'再現できるまで。2回目は月曜塾前に'},
+          {cat:'tetsu',text:'数学 先週分：練習問題',sub:'例題の類題。解法が出てくるか確認'},
+          {cat:'eng', text:'ターゲット 100語',sub:''},
         ]},
       ]
     },
@@ -172,12 +174,12 @@ const PHASES = [
       id:'d0602', label:'MON', date:'6/2（月）', type:'weekday',
       sections:[
         {title:'📚 鉄緑 数学（授業日）',items:[
+          {cat:'tetsu',text:'【塾前】数学 先週分：テキスト例題 2回目（直前確認）',sub:'塾に行く前に。解法が出てくるか最終確認'},
           {cat:'tetsu',text:'鉄緑 数学 授業',sub:'授業内で「？」な箇所をメモ'},
-          {cat:'tetsu',text:'数学 授業の疑問点 10分で確認（帰宅後）',sub:'22:30以降。それだけやって寝る'},
+          {cat:'chem',text:'【帰宅後】化学 総復テ範囲の怪しい単元 確認',sub:'22:30以降。30分以内で終わらせる'},
         ]},
-        {title:'🌙 通学・スキマ',items:[
-          {cat:'chem',text:'化学 怪しい単元の暗記確認（電車内）',sub:'明日のテスト直前確認'},
-          {cat:'eng', text:'ターゲット 100語',sub:''},
+        {title:'🌙 スキマ',items:[
+          {cat:'eng', text:'ターゲット 100語（電車）',sub:''},
         ]},
       ]
     },
@@ -205,10 +207,9 @@ const PHASES = [
       id:'d0604', label:'WED', date:'6/4（水）', type:'weekday',
       sections:[
         {title:'⭐ 水曜 集中日（部活なし）',items:[
-          {cat:'tetsu',text:'数学 テキスト例題 ×2回（宿題前半）',sub:'「解けた」ではなく「再現できる」まで'},
-          {cat:'math',text:'数Ⅲ 計算ドリル 3枚目（約45分）',sub:'溜まってる分の消化'},
-          {cat:'math',text:'数Ⅲ 計算ドリル 4枚目（約45分）',sub:''},
-          {cat:'phys',text:'物理 例題 解き直し（力学：7/8総復テ準備スタート）',sub:'今日から力学の例題確認を始める'},
+          {cat:'tetsu',text:'数Ⅲ 先週分：テキスト例題＋練習問題',sub:'解法を最初から最後まで自力で再現できるか'},
+          {cat:'tetsu',text:'数Ⅲ 先週分：問題集 全問（12問）',sub:'午後にまとめて。詰まったら例題に戻る'},
+          {cat:'tetsu',text:'数学 今週分：テキスト例題 1回目',sub:'授業で習った範囲。夜にもう1回やる余裕があれば'},
         ]},
         {title:'🏫 部活後 17:10〜19:10',items:[
           {cat:'free',text:'部活（水）17:10〜19:10',sub:''},
