@@ -1,0 +1,558 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>勉強進捗</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0f; --surface: #13131a; --border: #1e1e2e;
+    --accent: #f0c040; --accent2: #ff6b35;
+    --text: #e8e8f0; --muted: #555570; --done: #4ade80; --danger: #f87171;
+  }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    width: 100%; max-width: 480px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 28px 24px; position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+
+  /* ── SETTINGS OVERLAY ── */
+  .settings-overlay {
+    display: none; position: absolute; inset: 0;
+    background: var(--surface); border-radius: 16px;
+    padding: 28px 24px; z-index: 10; overflow-y: auto;
+  }
+  .settings-overlay.open { display: block; }
+
+  .settings-title {
+    font-family: 'Bebas Neue', cursive; font-size: 28px;
+    color: var(--accent); letter-spacing: 2px; margin-bottom: 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block; font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 7px;
+  }
+  .field input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: 'Noto Sans JP', sans-serif;
+    font-size: 16px; padding: 10px 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus { border-color: var(--accent); }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .settings-actions { display: flex; gap: 10px; margin-top: 8px; }
+
+  /* ── TOP ROW ── */
+  .top-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 22px;
+  }
+  .label { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .big-num { font-family: 'Bebas Neue', cursive; font-size: 52px; line-height: 1; color: var(--accent); }
+  .big-num span { font-size: 22px; color: var(--muted); margin-left: 2px; }
+  .time-block { text-align: right; }
+  .time-display { font-family: 'Bebas Neue', cursive; font-size: 36px; line-height: 1; color: var(--text); letter-spacing: 2px; }
+  .time-label { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
+
+  /* settings gear button */
+  .gear-btn {
+    position: absolute; top: 18px; right: 18px;
+    background: var(--border); border: none; color: var(--muted);
+    border-radius: 8px; width: 32px; height: 32px; font-size: 16px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; z-index: 5;
+  }
+  .gear-btn:hover { background: #2a2a3e; color: var(--text); }
+
+  /* ── TIMER ── */
+  .q-timer-section {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;
+  }
+  .q-timer-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .q-timer-title { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .q-num-badge {
+    font-family: 'Bebas Neue', cursive; font-size: 13px;
+    background: var(--border); color: var(--accent);
+    padding: 2px 10px; border-radius: 20px; letter-spacing: 1px;
+  }
+  .q-timer-display {
+    font-family: 'Bebas Neue', cursive; font-size: 64px; line-height: 1;
+    text-align: center; letter-spacing: 4px; transition: color 0.3s;
+  }
+  .q-timer-display.normal { color: var(--text); }
+  .q-timer-display.warn   { color: var(--accent); }
+  .q-timer-display.over   { color: var(--danger); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .ring-wrap {
+    display: flex; justify-content: center; align-items: center;
+    position: relative; height: 140px; margin-bottom: 10px;
+  }
+  .ring-svg { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 130px; height: 130px; }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
+  .ring-fg { fill: none; stroke-width: 6; stroke-linecap: round;
+    transform: rotate(-90deg); transform-origin: 50% 50%;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+
+  .q-timer-controls { display: flex; gap: 8px; margin-top: 12px; }
+
+  /* ── PROGRESS BAR ── */
+  .bar-section { margin-bottom: 18px; }
+  .bar-meta { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: var(--muted); }
+  .bar-meta strong { color: var(--text); }
+  .bar-track { width: 100%; height: 14px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 4px; transition: width 0.6s cubic-bezier(0.22,1,0.36,1); position: relative;
+  }
+  .bar-fill::after {
+    content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 40px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15));
+  }
+  .bar-ticks { display: flex; justify-content: space-between; margin-top: 5px; font-size: 10px; color: var(--muted); }
+
+  /* ── STATS ── */
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .stat-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 8px; text-align: center; }
+  .stat-val { font-family: 'Bebas Neue', cursive; font-size: 26px; line-height: 1; color: var(--text); }
+  .stat-val.green  { color: var(--done); }
+  .stat-val.orange { color: var(--accent2); }
+  .stat-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ── TIME BAR ── */
+  .time-bar-section { margin-bottom: 20px; }
+  .time-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .time-bar-track { width: 100%; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .time-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 4px; transition: width 1s linear; }
+
+  /* ── BUTTONS ── */
+  .controls { display: flex; gap: 10px; }
+  .btn {
+    flex: 1; padding: 12px; border: none; border-radius: 10px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; letter-spacing: 0.03em;
+  }
+  .btn-primary { background: var(--accent); color: #0a0a0f; }
+  .btn-primary:hover  { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary { background: var(--border); color: var(--text); }
+  .btn-secondary:hover { background: #2a2a3e; }
+  .btn-danger { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid var(--danger); }
+  .btn-danger:hover { background: rgba(248,113,113,0.25); }
+
+  .btn-sm {
+    flex: 1; padding: 8px 6px; border: none; border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-run  { background: var(--done); color: #0a0a0f; }
+  .btn-stop { background: var(--border); color: var(--text); }
+  .btn-reset{ background: var(--border); color: var(--muted); }
+  .btn-run:hover   { filter: brightness(1.1); }
+  .btn-stop:hover  { background: #2a2a3e; }
+  .btn-reset:hover { background: #2a2a3e; color: var(--text); }
+
+  .done-banner {
+    display: none; text-align: center; padding: 14px;
+    background: rgba(74,222,128,0.1); border: 1px solid var(--done);
+    border-radius: 10px; color: var(--done); font-weight: 700;
+    font-size: 15px; letter-spacing: 0.05em; margin-top: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- ⚙ gear button -->
+  <button class="gear-btn" onclick="openSettings()" title="設定">⚙</button>
+
+  <!-- ── SETTINGS OVERLAY ── -->
+  <div class="settings-overlay" id="settings-overlay">
+    <div class="settings-title">
+      設定
+      <button onclick="closeSettings()" style="background:var(--border);border:none;color:var(--muted);border-radius:8px;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>開始問題番号</label>
+        <input type="number" id="cfg-start" min="1" placeholder="例: 48">
+      </div>
+      <div class="field">
+        <label>終了問題番号</label>
+        <input type="number" id="cfg-end" min="1" placeholder="例: 90">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>現在の問題番号（途中から再開）</label>
+      <input type="number" id="cfg-current" min="1" placeholder="例: 56">
+    </div>
+
+    <div class="field">
+      <label>締め切り時刻</label>
+      <input type="time" id="cfg-deadline" step="60">
+    </div>
+
+    <div class="settings-actions">
+      <button class="btn btn-primary" onclick="applySettings()" style="flex:2">✓ 適用してスタート</button>
+      <button class="btn btn-secondary" onclick="closeSettings()" style="flex:1">キャンセル</button>
+    </div>
+
+    <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+      <button class="btn btn-danger" style="width:100%; font-size:12px;" onclick="resetAll()">↺ 全リセット（最初から）</button>
+    </div>
+  </div>
+
+  <!-- ── MAIN VIEW ── -->
+  <div id="main-view">
+    <!-- top -->
+    <div class="top-row">
+      <div>
+        <div class="label">進捗</div>
+        <div class="big-num" id="pct">—<span>%</span></div>
+      </div>
+      <div class="time-block" style="margin-right:36px">
+        <div class="label" style="text-align:right">残り時間</div>
+        <div class="time-display" id="countdown">--:--</div>
+        <div class="time-label" id="deadline-label">〜--:--</div>
+      </div>
+    </div>
+
+    <!-- per-problem timer -->
+    <div class="q-timer-section">
+      <div class="q-timer-header">
+        <div>
+          <div class="q-timer-title">1問タイマー</div>
+          <div id="pace-label" style="font-size:11px;color:var(--done);margin-top:2px;">推奨 --:--/問</div>
+        </div>
+        <div style="text-align:right">
+          <div class="q-num-badge" id="q-badge">問 —</div>
+          <div id="lap-indicator" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:var(--danger);background:rgba(248,113,113,0.12);border:1px solid var(--danger);border-radius:20px;padding:2px 8px;"></div>
+        </div>
+      </div>
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 130 130">
+          <circle class="ring-bg" cx="65" cy="65" r="58"/>
+          <circle class="ring-fg" id="ring" cx="65" cy="65" r="58"
+            stroke="#4ade80" stroke-dasharray="364.4" stroke-dashoffset="0"/>
+        </svg>
+        <div class="q-timer-display normal" id="q-timer">--:--</div>
+      </div>
+      <div class="q-timer-controls">
+        <button class="btn-sm btn-run"  id="btn-run"  onclick="timerStart()">▶ スタート</button>
+        <button class="btn-sm btn-stop" id="btn-stop" onclick="timerPause()" disabled>⏸ 一時停止</button>
+        <button class="btn-sm btn-reset"              onclick="timerReset()">↺ リセット</button>
+      </div>
+    </div>
+
+    <!-- progress bar -->
+    <div class="bar-section">
+      <div class="bar-meta">
+        <span>問 <strong id="cur-q">—</strong></span>
+        <span>目標：<strong id="end-label">—</strong>問</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="prog-bar" style="width:0%"></div>
+      </div>
+      <div class="bar-ticks" id="bar-ticks"></div>
+    </div>
+
+    <!-- stats -->
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-val green"  id="done-count">—</div>
+        <div class="stat-lbl">完了</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val orange" id="left-count">—</div>
+        <div class="stat-lbl">残り</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="pace">—</div>
+        <div class="stat-lbl">分/問 ペース</div>
+      </div>
+    </div>
+
+    <!-- session time bar -->
+    <div class="time-bar-section">
+      <div class="time-bar-label">
+        <span>セッション経過</span>
+        <span id="time-pct">—%</span>
+      </div>
+      <div class="time-bar-track">
+        <div class="time-bar-fill" id="time-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- main controls -->
+    <div class="controls">
+      <button class="btn btn-primary"   onclick="addProblem()">+1問 終わった！</button>
+      <button class="btn btn-secondary" onclick="subtractProblem()">−1 戻す</button>
+    </div>
+
+    <div class="done-banner" id="done-banner">🎉 全問クリア！お疲れ様！</div>
+  </div>
+</div>
+
+<script>
+  // ── STATE (from localStorage or defaults) ──
+  function loadState() {
+    try {
+      const s = localStorage.getItem('studyState');
+      if (s) return JSON.parse(s);
+    } catch(e) {}
+    return { start: 48, end: 90, current: 56, deadlineH: 18, deadlineM: 0 };
+  }
+
+  function saveState() {
+    try { localStorage.setItem('studyState', JSON.stringify(state)); } catch(e) {}
+  }
+
+  let state = loadState();
+
+  function getDeadline() {
+    // Use saved absolute ISO timestamp if available
+    if (state.deadlineISO) return new Date(state.deadlineISO);
+    // Fallback: build from HH:MM, roll to tomorrow if past
+    const now = new Date();
+    const d = new Date();
+    d.setHours(state.deadlineH, state.deadlineM, 0, 0);
+    if (d <= now) d.setDate(d.getDate() + 1);
+    return d;
+  }
+
+  function getTotal() { return state.end - state.start + 1; }
+
+  // ── SETTINGS ──
+  function openSettings() {
+    // populate fields with current state
+    document.getElementById('cfg-start').value    = state.start;
+    document.getElementById('cfg-end').value      = state.end;
+    document.getElementById('cfg-current').value  = state.current;
+    document.getElementById('cfg-deadline').value =
+      String(state.deadlineH).padStart(2,'0') + ':' + String(state.deadlineM).padStart(2,'0');
+    document.getElementById('settings-overlay').classList.add('open');
+  }
+
+  function closeSettings() {
+    document.getElementById('settings-overlay').classList.remove('open');
+  }
+
+  function applySettings() {
+    const s   = parseInt(document.getElementById('cfg-start').value, 10);
+    const e   = parseInt(document.getElementById('cfg-end').value, 10);
+    const cur = parseInt(document.getElementById('cfg-current').value, 10);
+    const dl  = document.getElementById('cfg-deadline').value;
+
+    if (isNaN(s) || isNaN(e) || s > e) { alert('問題番号を正しく入力してください'); return; }
+    if (isNaN(cur) || cur < s || cur > e + 1) { alert('現在の問題番号が範囲外です'); return; }
+    if (!dl) { alert('締め切り時刻を入力してください'); return; }
+
+    const [dh, dm] = dl.split(':').map(Number);
+    // Build absolute deadline: if that time today is already past, use tomorrow
+    const now = new Date();
+    const candidate = new Date();
+    candidate.setHours(dh, dm, 0, 0);
+    if (candidate <= now) candidate.setDate(candidate.getDate() + 1);
+
+    state = { start: s, end: e, current: cur,
+              deadlineH: dh, deadlineM: dm,
+              deadlineISO: candidate.toISOString() };
+    saveState();
+    closeSettings();
+    updateProgress();
+    timerReset();
+    rebuildTicks();
+  }
+
+  function resetAll() {
+    if (!confirm('進捗をリセットしますか？')) return;
+    state.current = state.start;
+    saveState();
+    closeSettings();
+    updateProgress();
+    timerReset();
+  }
+
+  function rebuildTicks() {
+    const container = document.getElementById('bar-ticks');
+    const total = getTotal();
+    const tickCount = Math.min(5, total + 1);
+    const step = Math.floor(total / (tickCount - 1));
+    const ticks = [];
+    for (let i = 0; i < tickCount - 1; i++) ticks.push(state.start + i * step);
+    ticks.push(state.end);
+    container.innerHTML = ticks.map(t => `<span>${t}</span>`).join('');
+    document.getElementById('end-label').textContent = state.end;
+  }
+
+  // ── TIMER ──
+  let elapsed = 0;
+  let paceSecs = 0;
+  let qRunning = false;
+  let qInterval = null;
+  const RING_CIRC = 364.4;
+
+  function getPaceSecs() {
+    const diffMs = getDeadline() - new Date();
+    const left = Math.max(1, state.end - state.current + 1);
+    const minsLeft = Math.max(0.5, diffMs / 60000); // never negative
+    return Math.max(10, Math.round((minsLeft / left) * 60)); // min 10sec per problem
+  }
+
+  function updateRing() {
+    if (paceSecs <= 0) return;
+    const el    = document.getElementById('q-timer');
+    const ring  = document.getElementById('ring');
+    const lapEl = document.getElementById('lap-indicator');
+
+    const lap       = Math.floor(elapsed / paceSecs);
+    const withinLap = elapsed % paceSecs;
+    const remaining = paceSecs - withinLap;
+
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    const timeStr = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    el.textContent = lap > 0 ? '-' + timeStr : timeStr;
+
+    const overFrac = withinLap / paceSecs;
+    el.className = 'q-timer-display ' +
+      (lap > 0 ? 'over' : overFrac >= 0.85 ? 'warn' : 'normal');
+
+    const frac = 1 - (withinLap / paceSecs);
+    ring.style.strokeDashoffset = RING_CIRC * (1 - frac);
+    ring.style.stroke = lap > 0 ? '#f87171' : overFrac >= 0.85 ? '#f0c040' : '#4ade80';
+
+    lapEl.textContent = '+' + lap + '周オーバー';
+    lapEl.style.display = lap > 0 ? 'inline-block' : 'none';
+
+    const pm = Math.floor(paceSecs / 60), ps = paceSecs % 60;
+    document.getElementById('pace-label').textContent =
+      '推奨 ' + pm + ':' + String(ps).padStart(2,'0') + '/問';
+  }
+
+  function timerStart() {
+    if (qRunning) return;
+    if (paceSecs === 0) paceSecs = getPaceSecs();
+    qRunning = true;
+    document.getElementById('btn-run').disabled = true;
+    document.getElementById('btn-stop').disabled = false;
+    qInterval = setInterval(() => { elapsed++; updateRing(); }, 1000);
+  }
+
+  function timerPause() {
+    if (!qRunning) return;
+    qRunning = false;
+    clearInterval(qInterval);
+    document.getElementById('btn-run').disabled = false;
+    document.getElementById('btn-stop').disabled = true;
+  }
+
+  function timerReset() {
+    timerPause();
+    elapsed = 0;
+    paceSecs = getPaceSecs();
+    updateRing();
+  }
+
+  // ── PROGRESS ──
+  function updateProgress() {
+    const now = new Date();
+    const DEADLINE = getDeadline();
+    const TOTAL = getTotal();
+    const done = Math.max(0, state.current - state.start);
+    const left = Math.max(0, state.end - state.current + 1);
+    const pct  = Math.min(100, Math.round((done / TOTAL) * 100));
+
+    document.getElementById('pct').innerHTML = pct + '<span>%</span>';
+    document.getElementById('cur-q').textContent = Math.min(state.current, state.end);
+    document.getElementById('done-count').textContent = done;
+    document.getElementById('left-count').textContent = left;
+    document.getElementById('prog-bar').style.width = pct + '%';
+    document.getElementById('q-badge').textContent = '問 ' + Math.min(state.current, state.end);
+
+    // deadline label
+    const dlToday = new Date(); dlToday.setHours(state.deadlineH, state.deadlineM, 0, 0);
+    const isNextDay = DEADLINE.getDate() !== new Date().getDate();
+    document.getElementById('deadline-label').textContent =
+      (isNextDay ? '明日' : '〜') + String(state.deadlineH).padStart(2,'0') + ':' + String(state.deadlineM).padStart(2,'0');
+
+    // countdown
+    const diffMs = DEADLINE - now;
+    if (diffMs > 0) {
+      const h = Math.floor(diffMs / 3600000);
+      const m = Math.floor((diffMs % 3600000) / 60000);
+      document.getElementById('countdown').textContent =
+        String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+    } else {
+      document.getElementById('countdown').textContent = '終了';
+    }
+
+    // pace stat
+    const minsLeft = Math.max(0, diffMs / 60000);
+    document.getElementById('pace').textContent =
+      (left > 0 && minsLeft > 0) ? (minsLeft / left).toFixed(1) : '—';
+
+    // session time bar (start of session = deadline - (total * estimated pace))
+    const sessionStart = new Date(DEADLINE.getTime() - TOTAL * getPaceSecs() * 1000);
+    const sessionElapsed = now - sessionStart;
+    const sessionTotal   = DEADLINE - sessionStart;
+    const tpct = Math.min(100, Math.max(0, Math.round(sessionElapsed / sessionTotal * 100)));
+    document.getElementById('time-bar').style.width = tpct + '%';
+    document.getElementById('time-pct').textContent = tpct + '%';
+
+    document.getElementById('done-banner').style.display =
+      state.current > state.end ? 'block' : 'none';
+  }
+
+  function addProblem() {
+    if (state.current <= state.end) {
+      state.current++;
+      saveState();
+      updateProgress();
+      timerReset();
+      timerStart();
+    }
+  }
+
+  function subtractProblem() {
+    if (state.current > state.start) {
+      state.current--;
+      saveState();
+      updateProgress();
+      timerReset();
+      timerStart();
+    }
+  }
+
+  // ── INIT ──
+  rebuildTicks();
+  updateProgress();
+  timerReset();
+  setInterval(updateProgress, 30000);
+</script>
+</body>
+</html>
