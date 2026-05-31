@@ -113,17 +113,12 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 </style>
 </head>
 <body>
-<div style="background: #1a1a28; padding: 15px; text-align: center; border-bottom: 1px solid #22223a;">
-  <a href="progress.html" style="color: #f0c040; font-weight: bold; text-decoration: none; font-size: 16px;">
-    📈 勉強進捗アプリへ移動
-  </a>
-</div>
+
 <div class="hd">
   <div class="hd-left">
     <h1>STUDY PLAN</h1>
     <p>東大理一 ／ 2026年6月〜8月</p>
   </div>
-
   <div class="hd-right">
     <strong id="hd-pct">0%</strong>
     <span>全体完了</span>
@@ -1245,6 +1240,18 @@ function buildAll(){
     pPanel.appendChild(phProgWrap);
 
     ph.days.forEach(day=>{
+      // 🌅 毎朝タスク：旅行・模試当日は除外
+      const skipMorning = ['d0719','d0728','d0729','d0730','d0731','d0801','d0819'].includes(day.id);
+      if(!skipMorning){
+        const morningTask = {
+          title:'🌅 毎朝タスク（起きたらすぐ・スマホより先）',
+          items:[
+            {cat:'math',text:'数Ⅲ 計算ドリル 1枚目',sub:'起きてすぐ。頭が動く前でもできる'},
+            {cat:'math',text:'数Ⅲ 計算ドリル 2枚目',sub:'8/19までに111枚完走するために毎朝2枚'},
+          ]
+        };
+        day.sections = [morningTask, ...day.sections];
+      }
       // 武田 毎日宿題を自動挿入（武田授業日・旅行・模試当日は除外）
       const skipTakeda = ['d0703','d0704','d0705','d0706','d0708','d0719','d0728','d0729','d0802','d0819'].includes(day.id)
         || day.id.startsWith('d08') && !['d0802','d0803','d0809','d0810','d0817','d0818','d0819'].includes(day.id);
@@ -1410,5 +1417,5 @@ function updateGlobalProg(){
 
 buildAll();
 </script>
-</body>　
+</body>
 </html>
