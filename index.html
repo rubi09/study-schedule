@@ -149,7 +149,7 @@ const PHASES = [
 {
   id:'p1', label:'6/1〜6/7',
   tags:[{t:'🔴 化学総復テ 6/3',c:'exam'},{t:'鉄緑週',c:'tetsu'}],
-  alert:'<strong>最優先：6/3（水）化学総復習テスト。</strong>月曜・火曜を化学対策に使う。平日は帰宅後30分以内で寝る準備。水・日が勝負。',
+  alert:'<strong>最優先：6/2（火）化学総復習テスト。</strong>月曜・火曜を化学対策に使う。平日は帰宅後30分以内で寝る準備。水・日が勝負。',
   days:[
     {
       id:'d0601', label:'MON', date:'6/1（月）', type:'weekday',
@@ -182,7 +182,7 @@ const PHASES = [
       ]
     },
     {
-      id:'d0603', label:'WED', date:'6/3（水）🔴', type:'weekday',
+      id:'d0602', label:'TUE', date:'6/2（火）🔴', type:'weekday',
       sections:[
         {title:'🔴 テスト',items:[
           {cat:'exam',text:'【鉄緑】化学 総復習テスト（7週分）',sub:'全力。終わったら結果は忘れる'},
@@ -264,7 +264,7 @@ const PHASES = [
 {
   id:'p2', label:'6/8〜6/14',
   tags:[{t:'物理力学 本格化',c:'phys'},{t:'英検 対策スタート',c:'takeda'}],
-  alert:'化学テストが終わったら次の目標は<strong>7/8（水）物理力学 総復習テスト</strong>。今週から力学の例題解き直しを本格始動。英検準1級（7/19）の対策を武田で相談する。',
+  alert:'化学テストが終わったら次の目標は<strong>7/7（火）物理力学 総復習テスト</strong>。今週から力学の例題解き直しを本格始動。英検準1級（7/19）の対策を武田で相談する。',
   days:[
     {
       id:'d0608', label:'MON', date:'6/8（月）', type:'weekday',
@@ -355,6 +355,10 @@ const PHASES = [
           {cat:'eng',text:'Vintage 文法 1ユニット確認',sub:''},
           {cat:'phys',text:'物理 力学 弱点単元 確認',sub:''},
         ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：鉄緑例題 4〜5題（見るだけでOK）',sub:'解かなくていい。解法の流れを頭に入れる'},
+          {cat:'math',text:'微分：4STEP 基礎問題 2〜3題',sub:'リードα基礎→解けなかったものだけ4STEPで確認'},
+        ]},
       ]
     },
     {
@@ -376,6 +380,16 @@ const PHASES = [
         {title:'英語',items:[
           {cat:'eng',text:'ターゲット 週まとめ確認',sub:''},
           {cat:'eng',text:'英検：長文2題 + 武田の英検宿題',sub:''},
+        ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：鉄緑例題 4〜5題（見るだけでOK）',sub:'解かなくていい。解法の流れを頭に入れる'},
+          {cat:'math',text:'微分：4STEP 基礎問題 2〜3題',sub:'リードα基礎→解けなかったものだけ4STEPで確認'},
+        ]},
+        {title:'📝 期末対策：物理',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 基礎問題',sub:'応用は基礎が終わってから'},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
         ]},
       ]
     },
@@ -399,6 +413,10 @@ const PHASES = [
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
         ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：鉄緑例題 4〜5題（見るだけでOK）',sub:'解かなくていい。解法の流れを頭に入れる'},
+          {cat:'math',text:'微分：4STEP 基礎問題 2〜3題',sub:'リードα基礎→解けなかったものだけ4STEPで確認'},
+        ]},
       ]
     },
     {
@@ -414,6 +432,12 @@ const PHASES = [
         ]},
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+        {title:'📝 期末対策：物理',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 基礎問題',sub:'応用は基礎が終わってから'},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
         ]},
       ]
     },
@@ -435,6 +459,16 @@ const PHASES = [
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語',sub:''},
         ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：鉄緑例題 4〜5題（見るだけでOK）',sub:'解かなくていい。解法の流れを頭に入れる'},
+          {cat:'math',text:'微分：4STEP 基礎問題 2〜3題',sub:'リードα基礎→解けなかったものだけ4STEPで確認'},
+        ]},
+        {title:'📝 期末対策：物理',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 基礎問題',sub:'応用は基礎が終わってから'},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
+        ]},
       ]
     },
     {
@@ -453,6 +487,10 @@ const PHASES = [
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
         ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：鉄緑例題 4〜5題（見るだけでOK）',sub:'解かなくていい。解法の流れを頭に入れる'},
+          {cat:'math',text:'微分：4STEP 基礎問題 2〜3題',sub:'リードα基礎→解けなかったものだけ4STEPで確認'},
+        ]},
       ]
     },
     {
@@ -465,6 +503,9 @@ const PHASES = [
         {title:'🌙 帰宅後',items:[
           {cat:'eng',text:'ターゲット 100語',sub:''},
           {cat:'tetsu',text:'数学 確認シリーズ とき直し（今週分）',sub:''},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
         ]},
       ]
     },
@@ -481,6 +522,12 @@ const PHASES = [
         {title:'夜',items:[
           {cat:'eng',text:'英検 長文2題（時間計測）',sub:''},
           {cat:'eng',text:'Vintage 文法 苦手ユニット確認',sub:''},
+        ]},
+        {title:'📝 期末対策：物理',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 基礎問題',sub:'応用は基礎が終わってから'},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
         ]},
       ]
     },
@@ -499,13 +546,23 @@ const PHASES = [
           {cat:'eng',text:'ターゲット 週まとめ確認',sub:''},
           {cat:'eng',text:'英検：長文2題 + 武田宿題',sub:''},
         ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：鉄緑例題 4〜5題（見るだけでOK）',sub:'解かなくていい。解法の流れを頭に入れる'},
+          {cat:'math',text:'微分：4STEP 基礎問題 2〜3題',sub:'リードα基礎→解けなかったものだけ4STEPで確認'},
+        ]},
+        {title:'📝 期末対策：物理',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 基礎問題',sub:'応用は基礎が終わってから'},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
+        ]},
       ]
     },
   ]
 },
 {
   id:'p4', label:'6/22〜7/5',
-  tags:[{t:'物理力学 仕上げ',c:'phys'},{t:'🔴 期末 7/3〜',c:'event'},{t:'🔴 物理総復テ 7/8',c:'exam'}],
+  tags:[{t:'物理力学 仕上げ',c:'phys'},{t:'🔴 期末 7/3〜',c:'event'},{t:'🔴 物理総復テ 7/7',c:'exam'}],
   alert:'<strong>物理総復テまで残り2週。</strong>力学の例題→問題集を全単元回す。期末（7/3〜）：物理・化学だけ真剣に対応（鉄緑の総復テと範囲が被る）。他は最低限でOK。',
   days:[
     {
@@ -517,6 +574,10 @@ const PHASES = [
         ]},
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：確認シリーズ 演習',sub:'解けなかったものを繰り返す'},
+          {cat:'math',text:'微分：4STEP 応用問題（少し）',sub:'基礎が固まったら'},
         ]},
       ]
     },
@@ -533,6 +594,12 @@ const PHASES = [
         ]},
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+        {title:'📝 期末対策：物理',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 基礎問題',sub:'応用は基礎が終わってから'},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
         ]},
       ]
     },
@@ -552,6 +619,16 @@ const PHASES = [
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語',sub:''},
         ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：確認シリーズ 演習',sub:'解けなかったものを繰り返す'},
+          {cat:'math',text:'微分：4STEP 応用問題（少し）',sub:'基礎が固まったら'},
+        ]},
+        {title:'📝 期末対策：物理',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 基礎問題',sub:'応用は基礎が終わってから'},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
+        ]},
       ]
     },
     {
@@ -567,6 +644,10 @@ const PHASES = [
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
         ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：確認シリーズ 演習',sub:'解けなかったものを繰り返す'},
+          {cat:'math',text:'微分：4STEP 応用問題（少し）',sub:'基礎が固まったら'},
+        ]},
       ]
     },
     {
@@ -579,6 +660,9 @@ const PHASES = [
         {title:'🌙 帰宅後',items:[
           {cat:'eng',text:'ターゲット 100語',sub:''},
           {cat:'tetsu',text:'数学 確認シリーズ とき直し',sub:''},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
         ]},
       ]
     },
@@ -599,6 +683,12 @@ const PHASES = [
           {cat:'phys',text:'物理 力学 弱点単元 解き直し',sub:'テキスト例題で解けなかったものだけ'},
           {cat:'eng',text:'英検 長文 or 武田宿題',sub:''},
         ]},
+        {title:'📝 期末対策：物理',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 基礎問題',sub:'応用は基礎が終わってから'},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
+        ]},
       ]
     },
     {
@@ -617,6 +707,16 @@ const PHASES = [
           {cat:'eng',text:'ターゲット 週まとめ確認',sub:''},
           {cat:'eng',text:'英検 長文2題 + 武田宿題',sub:''},
         ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：確認シリーズ 演習',sub:'解けなかったものを繰り返す'},
+          {cat:'math',text:'微分：4STEP 応用問題（少し）',sub:'基礎が固まったら'},
+        ]},
+        {title:'📝 期末対策：物理',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 基礎問題',sub:'応用は基礎が終わってから'},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
+        ]},
       ]
     },
     {
@@ -628,6 +728,10 @@ const PHASES = [
         ]},
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+        {title:'📝 期末対策：数学',items:[
+          {cat:'math',text:'漸化式：確認シリーズ 演習',sub:'解けなかったものを繰り返す'},
+          {cat:'math',text:'微分：4STEP 応用問題（少し）',sub:'基礎が固まったら'},
         ]},
       ]
     },
@@ -645,6 +749,12 @@ const PHASES = [
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
         ]},
+        {title:'📝 期末対策：物理',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 基礎問題',sub:'応用は基礎が終わってから'},
+        ]},
+        {title:'📝 期末対策：化学（無機）',items:[
+          {cat:'chem',text:'無機：リードα 基礎問題 + 暗記15分',sub:'元素ごとに整理。応用は基礎が固まってから'},
+        ]},
       ]
     },
     {
@@ -660,6 +770,15 @@ const PHASES = [
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語',sub:''},
         ]},
+        {title:'📝 期末対策：数学（直前）',items:[
+          {cat:'math',text:'漸化式・微分：解けなかった問題だけ最終確認',sub:'新しい問題はやらない'},
+        ]},
+        {title:'📝 期末対策：物理（直前）',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 解けなかった問題だけ',sub:''},
+        ]},
+        {title:'📝 期末対策：化学（直前）',items:[
+          {cat:'chem',text:'無機：暗記の最終確認',sub:'怪しいところだけ絞って確認'},
+        ]},
       ]
     },
     {
@@ -674,6 +793,15 @@ const PHASES = [
         ]},
         {title:'🌙 スキマ',items:[
           {cat:'eng',text:'ターゲット 100語（電車）',sub:''},
+        ]},
+        {title:'📝 期末対策：数学（直前）',items:[
+          {cat:'math',text:'漸化式・微分：解けなかった問題だけ最終確認',sub:'新しい問題はやらない'},
+        ]},
+        {title:'📝 期末対策：物理（直前）',items:[
+          {cat:'phys',text:'剛体・円運動・力積：リードα 解けなかった問題だけ',sub:''},
+        ]},
+        {title:'📝 期末対策：化学（直前）',items:[
+          {cat:'chem',text:'無機：暗記の最終確認',sub:'怪しいところだけ絞って確認'},
         ]},
       ]
     },
@@ -725,8 +853,8 @@ const PHASES = [
 },
 {
   id:'p5', label:'7/6〜7/19',
-  tags:[{t:'🔴 物理総復テ 7/8',c:'exam'},{t:'🔴 数Ⅲ総復テ 7/17',c:'exam'},{t:'🔴 英検準1 7/19',c:'exam'}],
-  alert:'テスト3連戦。<strong>7/8（水）物理→7/17（金）数Ⅲ→7/19（日）英検</strong>の順で切り替える。英検は落ちても1月再受験できるので気負わない。',
+  tags:[{t:'🔴 物理総復テ 7/7',c:'exam'},{t:'🔴 数Ⅲ総復テ 7/16',c:'exam'},{t:'🔴 英検準1 7/19',c:'exam'}],
+  alert:'テスト3連戦。<strong>7/8（水）物理→7/16（木）数Ⅲ→7/19（日）英検</strong>の順で切り替える。英検は落ちても1月再受験できるので気負わない。',
   days:[
     {
       id:'d0706', label:'MON', date:'7/6（月）', type:'weekday',
@@ -759,7 +887,7 @@ const PHASES = [
       ]
     },
     {
-      id:'d0708', label:'WED', date:'7/8（水）🔴', type:'holiday',
+      id:'d0707', label:'TUE', date:'7/7（火）🔴', type:'holiday',
       sections:[
         {title:'🔴 物理 力学 総復習テスト',items:[
           {cat:'exam',text:'【鉄緑】物理 力学 総復習テスト 本番',sub:'全力。終わったら引きずらない'},
@@ -899,7 +1027,7 @@ const PHASES = [
       ]
     },
     {
-      id:'d0717', label:'FRI', date:'7/17（金）🔴', type:'holiday',
+      id:'d0716', label:'THU', date:'7/16（木）🔴', type:'holiday',
       sections:[
         {title:'🔴 数Ⅲ 極限・微分 総復習テスト',items:[
           {cat:'exam',text:'【鉄緑】数Ⅲ 極限・微分 総復習テスト 本番',sub:'全力。計算ミスに注意'},
@@ -1057,12 +1185,12 @@ const PHASES = [
           {cat:'tetsu',text:'数学A 今週の学習内容 総復習',sub:''},
         ]},
         {title:'模試前確認',items:[
-          {cat:'event',text:'7/28 河合共通テスト模試 前日：数学計算のみ確認',sub:'対策は不要。現状把握と割り切る'},
+          {cat:'event',text:'7/25 河合共通テスト模試 前日：数学計算のみ確認',sub:'対策は不要。現状把握と割り切る'},
         ]},
       ]
     },
     {
-      id:'d0727', label:'MON', date:'7/27（月）📊模試前日', type:'weekend',
+      id:'d0725', label:'SAT', date:'7/25（土）📊模試前日', type:'weekend',
       sections:[
         {title:'📚 鉄緑 数学（通常授業）',items:[
           {cat:'tetsu',text:'鉄緑 数学 授業',sub:''},
@@ -1074,7 +1202,7 @@ const PHASES = [
       ]
     },
     {
-      id:'d0728', label:'TUE', date:'7/28（火）📊模試', type:'holiday',
+      id:'d0726', label:'SUN', date:'7/26（日）📊模試', type:'weekend',
       sections:[
         {title:'📊 河合 共通テスト模試',items:[
           {cat:'event',text:'河合共通テスト模試 受験',sub:'現状把握のみ。結果に一喜一憂しない'},
