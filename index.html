@@ -78,6 +78,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 .todo-left{display:flex;flex-direction:column;gap:2px;flex:1}
 .todo-text{font-size:12.5px;line-height:1.45}
 .todo-sub{font-size:10.5px;color:var(--muted)}
+.ttime{display:inline-block;font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.03em;margin-right:7px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
 .dot.math{background:var(--math)}.dot.phys{background:var(--phys)}.dot.chem{background:var(--chem)}
 .dot.eng{background:var(--eng)}.dot.exam{background:var(--exam)}.dot.event{background:var(--event)}
@@ -1374,6 +1375,7 @@ PHASES.forEach(p=>p.legacy=true);
 const WDJ = '日月火水木金土';
 const LBL = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const CLUB_END = new Date(2026,10,1); // 11/1 以降は部活なし（10月末引退）
+const BEDTIME = {MON:'24:00',TUE:'24:00',WED:'23:00',THU:'24:00',FRI:'23:00',SAT:'23:00',SUN:'23:00'};
 
 function mkd(m,d){ return new Date(2026, m-1, d); }
 function idOf(dt){ return 'd'+String(dt.getMonth()+1).padStart(2,'0')+String(dt.getDate()).padStart(2,'0'); }
@@ -1382,60 +1384,62 @@ function dateLabel(dt){ return mdOf(dt)+'（'+WDJ[dt.getDay()]+'）'; }
 
 // ── 曜日テンプレート ──────────────────────────
 function weekTemplate(dow, club){
-  const clubSec = {title:'🏃 部活',items:[
-    {cat:'event',text:'部活',sub:'10月末で引退。それまでは軽い日として扱う'},
-  ]};
+  const after = (t,text,sub,cat)=>({cat:cat||'chem',t:t,text:text,sub:sub});
   switch(dow){
     case 1: return [ // 月
-      {title:'📚 鉄緑 数学（授業）',items:[
-        {cat:'tetsu',text:'鉄緑 数学 授業',sub:''},
-        {cat:'tetsu',text:'当日の例題を即復習（1回分）',sub:'帰宅後すぐ。ためると土曜が死ぬ'},
+      {title:'📚 鉄緑 数学（テストあり）',items:[
+        {cat:'math', t:'16:00–16:40', text:'数学の見返し（今日のテスト対策）',sub:'授業の直前にもう一度通す'},
+        {cat:'math', t:'16:40–17:30', text:'数Ⅲ 問題集の先行着手',sub:'鉄緑の自習室が使えるなら。ここが使えると水曜が楽になる'},
+        {cat:'tetsu',t:'17:30–21:30', text:'鉄緑 数学 授業',sub:'22:10 帰宅'},
+        {cat:'tetsu',t:'23:00–23:45', text:'当日の例題を即復習（1回分）',sub:'次の数学まで6日あく。記憶が新しいうちに'},
       ]},
     ];
     case 2: return [ // 火
-      {title:'📚 鉄緑 物理化学（授業）',items:[
-        {cat:'tetsu',text:'鉄緑 物理化学 授業',sub:''},
-        {cat:'phys',text:'例題＋指定2題（最低限）',sub:'模試の科目外。12/20までは最低限だけキープ'},
+      {title:'📚 鉄緑 物理化学（テストあり）',items:[
+        {cat:'phys', t:'15:30–16:00', text:'物理化学の見返し（今日のテスト対策）',sub:'部活前の30分'},
+        club ? {cat:'event',t:'16:00–17:00', text:'部活',sub:'10月末で引退'}
+             : {cat:'chem', t:'16:00–17:00', text:'理科 1周目 自習',sub:'引退後に空いた枠'},
+        {cat:'tetsu',t:'17:30–21:30', text:'鉄緑 物理化学 授業',sub:'22:10 帰宅'},
+        {cat:'phys', t:'23:00–23:45', text:'例題＋指定2題（着手だけでいい）',sub:'模試の科目外。終わらなければ土日へ'},
       ]},
-      ...(club ? [clubSec] : [{title:'🌙 引退後の空き枠',items:[
-        {cat:'chem',text:'理科 1周目 自習',sub:'11月から取り返す枠'},
-      ]}]),
     ];
     case 3: return [ // 水
-      {title:'🔥 最大枠（3〜4h）',items:[
-        {cat:'math',text:'数Ⅲ 問題集 12問',sub:'今週ぶん。何があってもここは死守'},
+      {title:'🔥 最大枠（塾なし・部活なし）',items:[
+        {cat:'math',t:'16:00–19:00', text:'数Ⅲ 問題集 12問',sub:'3時間まるごと。何があってもここは死守'},
+        {cat:'phys',t:'20:00–20:50', text:'良問の風 5題',sub:''},
       ]},
     ];
     case 4: return [ // 木
-      {title:'📚 鉄緑 数Ⅲ（授業）',items:[
-        {cat:'tetsu',text:'鉄緑 数Ⅲ 授業',sub:''},
-        {cat:'math',text:'テキスト 例題7題＋練習問題3題',sub:'授業当日のうちに。1時間で回せる分量'},
+      {title:'📚 鉄緑 数Ⅲ（テストあり）',items:[
+        {cat:'math', t:'15:30–16:00', text:'数Ⅲの見返し（今日のテスト対策）',sub:'部活前の30分'},
+        club ? {cat:'event',t:'16:00–17:00', text:'部活',sub:'10月末で引退'}
+             : {cat:'eng',  t:'16:00–17:00', text:'英語 精読 1本',sub:'引退後に空いた枠。構文把握'},
+        {cat:'tetsu',t:'17:30–22:30', text:'鉄緑 数Ⅲ 授業（伸びる）',sub:'23:10 帰宅。この日の夜は使えない'},
       ]},
-      ...(club ? [clubSec] : [{title:'🌙 引退後の空き枠',items:[
-        {cat:'eng',text:'英語 精読 1本',sub:'構文把握。11月から'},
-      ]}]),
     ];
     case 5: return [ // 金
-      {title:'📘 武田塾（20:45〜21:45）',items:[
-        {cat:'takeda',text:'武田塾 特訓',sub:''},
-        {cat:'takeda',text:'次回宿題の範囲をメモ・確認',sub:'日次スケジュール表と照合する'},
+      {title:'🔥 午後の枠',items:[
+        {cat:'math',t:'16:00–17:00', text:'数Ⅲ テキスト 例題7題＋練習問題3題',sub:'木の授業の翌日。1時間で回せる分量'},
+        {cat:'phys',t:'17:00–18:00', text:'良問の風 5題',sub:''},
       ]},
-      {title:'🌙 帰宅後',items:[
-        {cat:'eng',text:'英語の積み残しを回収',sub:'今週できなかったぶんだけ。新しいことはやらない'},
+      {title:'📘 武田塾',items:[
+        {cat:'takeda',t:'18:45–21:45', text:'武田塾（テスト → 特訓）',sub:'夕食は18:00–18:30に前倒し'},
+        {cat:'takeda',t:'', text:'次回宿題の範囲をメモ・確認',sub:'日次スケジュール表と照合する'},
       ]},
     ];
     case 6: return [ // 土
-      {title:'🔥 最大枠',items:[
-        {cat:'tetsu',text:'数学 指定問題 4題',sub:''},
-        {cat:'tetsu',text:'数学 練習問題',sub:''},
-        {cat:'tetsu',text:'確認シリーズ とき直し（翌週分）',sub:''},
+      {title:'🔥 午後まるごと',items:[
+        {cat:'tetsu',t:'14:00–17:00', text:'数学 指定問題4題＋練習問題',sub:''},
+        {cat:'tetsu',t:'17:00–18:00', text:'確認シリーズ とき直しの仕上げ',sub:'平日の内職で進めたぶんの残りだけ'},
+        {cat:'phys', t:'19:00–19:50', text:'良問の風 5題',sub:''},
       ]},
     ];
     default: return [ // 日
       {title:'📖 仕上げ',items:[
-        {cat:'math',text:'数Ⅲ の残り',sub:''},
-        {cat:'tetsu',text:'翌週テスト対策',sub:'毎週テストがある'},
-        {cat:'free',text:'バッファ（学校課題・単元テスト・休養）',sub:'空いたら休んでいい枠'},
+        {cat:'math', t:'10:00–12:00', text:'数Ⅲ の残り',sub:''},
+        {cat:'tetsu',t:'13:00–16:00', text:'翌週テスト対策',sub:'5週に1回の総復習テストの前週は、ここを丸ごと総復習に振り替える'},
+        {cat:'eng',  t:'16:00–17:15', text:'武田まとめ（EX・速熟・Vintage）＋良問の風 4題',sub:'日曜は内職ぶんがないのでここで回す'},
+        {cat:'free', t:'17:15–',      text:'バッファ（学校課題・単元テスト・休養）',sub:'ここを休養に使えた週はうまくいっている週'},
       ]},
     ];
   }
@@ -1445,36 +1449,31 @@ function weekTemplate(dow, club){
 // extra: テンプレの後ろに足す / replace: テンプレを捨てて差し替え
 const OVERRIDE = {
   '9/19':{extra:[{title:'🔁 前期数Ⅲ復習（最重要）',items:[
-    {cat:'math',text:'積分(1) 第8回 指定 ★5・9・10・12',sub:'4題'},
+    {cat:'math',t:'19:50–22:30',text:'積分(1) 第8回 指定 ★5・9・10・12',sub:'4題'},
     {cat:'math',text:'積分(2) 第9回 指定 ★4・5',sub:'2題'},
     {cat:'math',text:'積分(3) 第10回 指定 ★2・4・11・13・14',sub:'5題'},
     {cat:'math',text:'第8〜10回の例題を通す',sub:'3〜4h見ておく'},
   ]}]},
   '9/20':{extra:[{title:'🔁 前期数Ⅲ復習（最重要）',items:[
-    {cat:'math',text:'積分(4) 第11回 指定 ★4・7・9・10（♥12）',sub:''},
+    {cat:'math',t:'9:30–16:00',text:'積分(4) 第11回 指定 ★4・7・9・10（♥12）',sub:''},
     {cat:'math',text:'積分(5) 第12回 指定 ★4・5・10・11',sub:''},
     {cat:'math',text:'積分(6) 第13回 指定 ★3・7・9・13',sub:''},
     {cat:'math',text:'第11〜13回の例題を通す',sub:'積分はここで終わらせる'},
   ]}]},
   '9/26':{extra:[{title:'🔁 前期数Ⅲ復習',items:[
-    {cat:'math',text:'複素数平面(1) 第14回 指定 ★3・5・6・10（♥11）',sub:''},
+    {cat:'math',t:'19:50–22:30',text:'複素数平面(1) 第14回 指定 ★3・5・6・10（♥11）',sub:''},
     {cat:'math',text:'複素数平面(2) 第15回 指定 ★1・7・8・9',sub:''},
   ]}]},
   '9/27':{extra:[{title:'🔁 前期数Ⅲ復習',items:[
-    {cat:'math',text:'複素数平面(3) 第16回 指定 ★1・4・5・11（♥10）',sub:''},
-    {cat:'math',text:'計算ドリル 滞留分 1周（前倒し）',sub:'積分より軽い週なのでここで1周稼ぐ'},
+    {cat:'math',t:'9:30–16:00',text:'複素数平面(3) 第16回 指定 ★1・4・5・11（♥10）',sub:''},
   ]}]},
   '10/3':{extra:[{title:'🔁 前期数Ⅲ復習（残り）',items:[
-    {cat:'math',text:'平面上の曲線(1) 第17回 指定 ★6・9・12',sub:'3題'},
+    {cat:'math',t:'19:50–22:30',text:'平面上の曲線(1) 第17回 指定 ★6・9・12',sub:'3題'},
   ]}]},
   '10/4':{extra:[{title:'🔁 前期数Ⅲ復習（残り）',items:[
-    {cat:'math',text:'平面上の曲線(2) 第18回 指定 ★6・7・8・11・14・16',sub:'6題。これで前期復習は完了'},
+    {cat:'math',t:'9:30–16:00',text:'平面上の曲線(2) 第18回 指定 ★6・7・8・11・14・16',sub:'6題。これで前期復習は完了'},
   ]}]},
-  '10/7' :{extra:[{title:'🧮 計算ドリル 滞留消化',items:[{cat:'math',text:'滞留分 1周（2/6）',sub:'模試の大問②は計算テストから出る'}]}]},
-  '10/11':{extra:[{title:'🧮 計算ドリル 滞留消化',items:[{cat:'math',text:'滞留分 1周（3/6）',sub:''}]}]},
-  '10/14':{extra:[{title:'🧮 計算ドリル 滞留消化',items:[{cat:'math',text:'滞留分 1周（4/6）',sub:''}]}]},
-  '10/18':{extra:[{title:'🧮 計算ドリル 滞留消化',items:[{cat:'math',text:'滞留分 1周（5/6）',sub:''}]}]},
-  '10/21':{extra:[{title:'🧮 計算ドリル 滞留消化',items:[{cat:'math',text:'滞留分 1周（6/6）完走',sub:'これで溜まっていた6周が片づく'}]}]},
+  '10/30':{extra:[{title:'🧮 節目',items:[{cat:'math',t:'',text:'計算ドリル 滞留42枚 完走',sub:'9/19から1日1枚。ここから先は新規分だけを回せばいい'}]}]},
   '10/31':{extra:[{title:'🎽 節目',items:[
     {cat:'event',text:'部活 引退（10月末）',sub:'火・木の放課後がここから空く。11月が勝負どころ'},
   ]}]},
@@ -1618,32 +1617,47 @@ function injectLegacy(day){
 }
 
 function injectCurrent(day){
-  // 毎朝：新規分の計算ドリルだけ。滞留分は例外日に別枠で置いてある
-  day.sections = [{
-    title:'🌅 毎朝タスク（起きたらすぐ・スマホより先）',
-    items:[
-      {cat:'math',text:'計算ドリル 新規分（15分）',sub:'その日のぶんはその日に。滞留6周分とは混ぜない'},
-    ]
-  }, ...day.sections];
+  const dow = day.label;
+  // 滞留42枚は 9/19 から1日1枚で 10/30 に完走する。それ以降は新規分だけ
+  const backlog = day.id <= 'd1030';
+  const drill = [
+    {cat:'math',t:'20分', text:'計算ドリル 新規分 1枚',sub:'週7枚＝ちょうど1周。ここを欠かすと負債がまた増える'},
+  ];
+  if(backlog) drill.push({cat:'math',t:'20分', text:'計算ドリル 滞留分 1枚',sub:'42枚を1日1枚で完済。10/30 完走の計算'});
 
-  const isTakedaClass = day.label==='FRI';
-  day.sections = [...day.sections, isTakedaClass ? {
-    title:'📘 武田 毎日タスク（授業日・軽量版）',
-    items:[
-      {cat:'eng', text:'英検準1級単熟語EX：今日の100語',sub:''},
-      {cat:'eng', text:'ターゲット1900：今日の範囲',sub:''},
-      {cat:'eng', text:'速読英熟語：今日の範囲',sub:'📖 電車の中で'},
-      {cat:'eng', text:'Vintage：今日の章',sub:''},
-    ]
-  } : {
-    title:'📘 武田 毎日タスク',
-    items:[
-      {cat:'eng', text:'英検準1級単熟語EX：今日の100語',sub:'日次表の範囲（例：1401-1800を6日割り）'},
-      {cat:'eng', text:'ターゲット1900：今日の範囲',sub:'全範囲まわし'},
-      {cat:'eng', text:'速読英熟語：今日の範囲',sub:'📖 電車の中で'},
-      {cat:'eng', text:'Vintage：今日の章',sub:'文法→語法の順で'},
-      {cat:'phys',text:'良問の風 物理：今日の範囲',sub:'武田の日次表を確認'},
-    ]
+  // 学校の内職。武田の日割りはここで終わる（ターゲット1900は外した）
+  if(dow!=='SUN'){
+    const full = dow!=='SAT';
+    day.sections = [{
+      title: full ? '🏫 学校の内職（100分）' : '🏫 学校の内職（40分）',
+      items: full ? [
+        {cat:'eng', t:'20分', text:'英検準1級単熟語EX 100語',sub:'日割りで範囲が決まっているので外せない'},
+        {cat:'eng', t:'15分', text:'速読英熟語 4項',sub:''},
+        {cat:'eng', t:'15分', text:'Vintage 1項',sub:'文法→語法の順で'},
+        ...drill,
+      ] : [
+        {cat:'eng', t:'20分', text:'英検準1級単熟語EX 100語',sub:''},
+        {cat:'eng', t:'15分', text:'速読英熟語 4項',sub:''},
+      ]
+    }, ...day.sections];
+  }
+
+  // 土日は内職枠が足りない／ないので、家の時間にドリルを置く
+  if(dow==='SAT' || dow==='SUN'){
+    const at = dow==='SAT' ? '13:20–14:00' : '9:00–9:40';
+    day.sections = [{
+      title:'🧮 計算ドリル',
+      items: drill.map(d=>({...d, t:at}))
+    }, ...day.sections];
+  }
+
+  // 就寝時刻を固定する。入らなかったぶんは翌日か週末に流す
+  const bed = BEDTIME[dow] || '23:00';
+  day.sections = [...day.sections, {
+    title:'🌙 就寝',
+    items:[ dow==='THU'
+      ? {cat:'free',t:bed,text:'勉強しないで寝る',sub:'23:10帰宅。ここに何か置くと週全体が後ろにずれる'}
+      : {cat:'free',t:bed,text:'寝る',sub:'7時半起きで7時間半。ここを削らない'} ]
   }];
 }
 
@@ -1868,7 +1882,7 @@ function buildAll(){
             <div class="dot ${item.cat}"></div>
             <div class="cb"><span class="cb-check">✓</span></div>
             <div class="todo-left">
-              <span class="todo-text">${item.text}</span>
+              <span class="todo-text">${item.t?`<span class="ttime">${item.t}</span>`:''}${item.text}</span>
               ${item.sub?`<span class="todo-sub">${item.sub}</span>`:''}
             </div>
           `;
