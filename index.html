@@ -110,6 +110,25 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 .phase-prog-nums{font-size:11px;font-weight:700;color:var(--accent)}
 .phase-prog-track{height:6px;background:var(--dim);border-radius:3px;overflow:hidden}
 .phase-prog-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:3px;transition:width .4s}
+
+/* countdown */
+.dday{display:block;margin-top:3px;font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:.04em}
+
+/* backup */
+.bk{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden}
+.bk summary{cursor:pointer;padding:9px 13px;font-size:11px;color:var(--muted);letter-spacing:.05em;list-style:none;-webkit-tap-highlight-color:transparent}
+.bk summary::-webkit-details-marker{display:none}
+.bk summary::before{content:'💾 ';}
+.bk summary:hover{color:var(--text)}
+.bk-body{padding:0 13px 12px;display:flex;flex-direction:column;gap:8px}
+.bk-note{font-size:10.5px;color:var(--muted);line-height:1.6}
+.bk-btns{display:flex;gap:8px}
+.bk-btns button{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s}
+.bk-btns button:hover{background:var(--dim)}
+.bk-btns button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bk textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;padding:8px;resize:vertical}
+.bk textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.bk-msg{font-size:10.5px;color:var(--done);min-height:14px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -117,11 +136,12 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 <div class="hd">
   <div class="hd-left">
     <h1>STUDY PLAN</h1>
-    <p>東大理一 ／ 2026年6月〜8月</p>
+    <p>東大理一 ／ 6月〜12/20 クリスマス模試</p>
   </div>
   <div class="hd-right">
     <strong id="hd-pct">0%</strong>
     <span>全体完了</span>
+    <span class="dday" id="dday">—</span>
   </div>
 </div>
 <a href="progress.html" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#1a1a28;border:1px solid #22223a;border-radius:10px;padding:10px 16px;margin-bottom:14px;text-decoration:none;color:#e8e8f2;font-size:13px;font-weight:700;letter-spacing:.05em;transition:background .15s;" onmouseover="this.style.background='#22223a'" onmouseout="this.style.background='#1a1a28'">
@@ -134,6 +154,19 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
   <div class="prog-label"><span>全タスク進捗</span><span id="prog-pct-label">0 / 0 完了</span></div>
   <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
 </div>
+
+<details class="bk">
+  <summary>チェック履歴のバックアップ</summary>
+  <div class="bk-body">
+    <p class="bk-note">端末のブラウザにしか残らないので、大事な時期は時々書き出しておく。</p>
+    <div class="bk-btns">
+      <button type="button" id="bk-out">書き出す</button>
+      <button type="button" id="bk-in">読み込む</button>
+    </div>
+    <textarea id="bk-ta" rows="3" placeholder="ここに書き出したテキストが入る／貼りつけて読み込む"></textarea>
+    <p class="bk-msg" id="bk-msg"></p>
+  </div>
+</details>
 
 <div class="phase-tabs" id="phase-tabs"></div>
 <div id="phase-panels"></div>
@@ -1324,12 +1357,373 @@ const PHASES = [
 },
 ];
 
+// ═════════════════════════════════════════════
+// 9/19 → 12/20 クリスマス模試フェーズ
+// 週テンプレート＋例外日の上書きで生成する（手書きしない）
+// ═════════════════════════════════════════════
+PHASES.forEach(p=>p.legacy=true);
+
+const WDJ = '日月火水木金土';
+const LBL = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const CLUB_END = new Date(2026,10,1); // 11/1 以降は部活なし（10月末引退）
+
+function mkd(m,d){ return new Date(2026, m-1, d); }
+function idOf(dt){ return 'd'+String(dt.getMonth()+1).padStart(2,'0')+String(dt.getDate()).padStart(2,'0'); }
+function mdOf(dt){ return (dt.getMonth()+1)+'/'+dt.getDate(); }
+function dateLabel(dt){ return mdOf(dt)+'（'+WDJ[dt.getDay()]+'）'; }
+
+// ── 曜日テンプレート ──────────────────────────
+function weekTemplate(dow, club){
+  const clubSec = {title:'🏃 部活',items:[
+    {cat:'event',text:'部活',sub:'10月末で引退。それまでは軽い日として扱う'},
+  ]};
+  switch(dow){
+    case 1: return [ // 月
+      {title:'📚 鉄緑 数学（授業）',items:[
+        {cat:'tetsu',text:'鉄緑 数学 授業',sub:''},
+        {cat:'tetsu',text:'当日の例題を即復習（1回分）',sub:'帰宅後すぐ。ためると土曜が死ぬ'},
+      ]},
+    ];
+    case 2: return [ // 火
+      {title:'📚 鉄緑 物理化学（授業）',items:[
+        {cat:'tetsu',text:'鉄緑 物理化学 授業',sub:''},
+        {cat:'phys',text:'例題＋指定2題（最低限）',sub:'模試の科目外。12/20までは最低限だけキープ'},
+      ]},
+      ...(club ? [clubSec] : [{title:'🌙 引退後の空き枠',items:[
+        {cat:'chem',text:'理科 1周目 自習',sub:'11月から取り返す枠'},
+      ]}]),
+    ];
+    case 3: return [ // 水
+      {title:'🔥 最大枠（3〜4h）',items:[
+        {cat:'math',text:'数Ⅲ 問題集 12問',sub:'今週ぶん。何があってもここは死守'},
+      ]},
+    ];
+    case 4: return [ // 木
+      {title:'📚 鉄緑 数Ⅲ（授業）',items:[
+        {cat:'tetsu',text:'鉄緑 数Ⅲ 授業',sub:''},
+        {cat:'math',text:'当日の例題を復習',sub:''},
+      ]},
+      ...(club ? [clubSec] : [{title:'🌙 引退後の空き枠',items:[
+        {cat:'eng',text:'英語 精読 1本',sub:'構文把握。11月から'},
+      ]}]),
+    ];
+    case 5: return [ // 金
+      {title:'📘 武田塾（20:45〜21:45）',items:[
+        {cat:'takeda',text:'武田塾 特訓',sub:''},
+        {cat:'takeda',text:'次回宿題の範囲をメモ・確認',sub:'日次スケジュール表と照合する'},
+      ]},
+      {title:'🌙 帰宅後',items:[
+        {cat:'eng',text:'英語の積み残しを回収',sub:'今週できなかったぶんだけ。新しいことはやらない'},
+      ]},
+    ];
+    case 6: return [ // 土
+      {title:'🔥 最大枠',items:[
+        {cat:'tetsu',text:'数学 指定問題 4題',sub:''},
+        {cat:'tetsu',text:'数学 練習問題',sub:''},
+        {cat:'tetsu',text:'確認シリーズ とき直し（翌週分）',sub:''},
+      ]},
+    ];
+    default: return [ // 日
+      {title:'📖 仕上げ',items:[
+        {cat:'math',text:'数Ⅲ の残り',sub:''},
+        {cat:'tetsu',text:'翌週テスト対策',sub:'毎週テストがある'},
+        {cat:'free',text:'バッファ（学校課題・単元テスト・休養）',sub:'空いたら休んでいい枠'},
+      ]},
+    ];
+  }
+}
+
+// ── 例外日 ────────────────────────────────────
+// extra: テンプレの後ろに足す / replace: テンプレを捨てて差し替え
+const OVERRIDE = {
+  '9/19':{extra:[{title:'🔁 前期数Ⅲ復習（最重要）',items:[
+    {cat:'math',text:'積分(1) 第8回 指定 ★5・9・10・12',sub:'4題'},
+    {cat:'math',text:'積分(2) 第9回 指定 ★4・5',sub:'2題'},
+    {cat:'math',text:'積分(3) 第10回 指定 ★2・4・11・13・14',sub:'5題'},
+    {cat:'math',text:'第8〜10回の例題を通す',sub:'3〜4h見ておく'},
+  ]}]},
+  '9/20':{extra:[{title:'🔁 前期数Ⅲ復習（最重要）',items:[
+    {cat:'math',text:'積分(4) 第11回 指定 ★4・7・9・10（♥12）',sub:''},
+    {cat:'math',text:'積分(5) 第12回 指定 ★4・5・10・11',sub:''},
+    {cat:'math',text:'積分(6) 第13回 指定 ★3・7・9・13',sub:''},
+    {cat:'math',text:'第11〜13回の例題を通す',sub:'積分はここで終わらせる'},
+  ]}]},
+  '9/26':{extra:[{title:'🔁 前期数Ⅲ復習',items:[
+    {cat:'math',text:'複素数平面(1) 第14回 指定 ★3・5・6・10（♥11）',sub:''},
+    {cat:'math',text:'複素数平面(2) 第15回 指定 ★1・7・8・9',sub:''},
+  ]}]},
+  '9/27':{extra:[{title:'🔁 前期数Ⅲ復習',items:[
+    {cat:'math',text:'複素数平面(3) 第16回 指定 ★1・4・5・11（♥10）',sub:''},
+    {cat:'math',text:'計算ドリル 滞留分 1周（前倒し）',sub:'積分より軽い週なのでここで1周稼ぐ'},
+  ]}]},
+  '10/3':{extra:[{title:'🔁 前期数Ⅲ復習（残り）',items:[
+    {cat:'math',text:'平面上の曲線(1) 第17回 指定 ★6・9・12',sub:'3題'},
+  ]}]},
+  '10/4':{extra:[{title:'🔁 前期数Ⅲ復習（残り）',items:[
+    {cat:'math',text:'平面上の曲線(2) 第18回 指定 ★6・7・8・11・14・16',sub:'6題。これで前期復習は完了'},
+  ]}]},
+  '10/7' :{extra:[{title:'🧮 計算ドリル 滞留消化',items:[{cat:'math',text:'滞留分 1周（2/6）',sub:'模試の大問②は計算テストから出る'}]}]},
+  '10/11':{extra:[{title:'🧮 計算ドリル 滞留消化',items:[{cat:'math',text:'滞留分 1周（3/6）',sub:''}]}]},
+  '10/14':{extra:[{title:'🧮 計算ドリル 滞留消化',items:[{cat:'math',text:'滞留分 1周（4/6）',sub:''}]}]},
+  '10/18':{extra:[{title:'🧮 計算ドリル 滞留消化',items:[{cat:'math',text:'滞留分 1周（5/6）',sub:''}]}]},
+  '10/21':{extra:[{title:'🧮 計算ドリル 滞留消化',items:[{cat:'math',text:'滞留分 1周（6/6）完走',sub:'これで溜まっていた6周が片づく'}]}]},
+  '10/31':{extra:[{title:'🎽 節目',items:[
+    {cat:'event',text:'部活 引退（10月末）',sub:'火・木の放課後がここから空く。11月が勝負どころ'},
+  ]}]},
+  '12/19':{type:'weekend', replace:[
+    {title:'🔴 模試 前日',items:[
+      {cat:'math',text:'数Ⅲ 計算ドリル 苦手なところだけ',sub:'新しい問題はやらない'},
+      {cat:'tetsu',text:'確認シリーズ・例題をざっと見返す',sub:'解かずに眺めるだけでいい'},
+      {cat:'eng',text:'英作文のテーマ例文をざっと確認',sub:''},
+      {cat:'misc',text:'会場・持ち物確認、早寝（22時台）',sub:'コンディションが全て'},
+    ]},
+  ]},
+  '12/20':{type:'holiday', noAuto:true, replace:[
+    {title:'🔴🔴 第2回校内模試（クリスマス模試）',items:[
+      {cat:'exam',text:'鉄緑 第2回校内模試 本番（英語・数学）',sub:'120点中60点は数Ⅲ。目標はSAクラス＝平均超え'},
+    ]},
+    {title:'終了後',items:[
+      {cat:'misc',text:'お疲れさま。ここから休みに入る',sub:'阿智村の星空旅行へ'},
+    ]},
+  ]},
+};
+
+// ── フェーズ定義 ──────────────────────────────
+const NEWP = [
+  {id:'q1', from:[9,19], to:[9,20], label:'9/19〜9/20',
+   tags:[{t:'🔁 前期数Ⅲ復習',c:'tetsu'},{t:'積分の山場',c:'exam'}],
+   alert:'<strong>最優先：前期数Ⅲの積分。</strong>第8〜13回で指定★23題、例題も6回分。9月でいちばん重い2日なので土日とも3〜4h確保する。ここを抜ければ残りは軽い。'},
+  {id:'q2', from:[9,21], to:[9,27], label:'9/21〜9/27',
+   tags:[{t:'🔁 複素数平面',c:'tetsu'},{t:'鉄緑週',c:'tetsu'}],
+   alert:'<strong>複素数平面は指定★12題（♥2）。</strong>積分の半分の量なので、浮いたぶんで計算ドリルの滞留を1周だけ前倒しする。水曜の「今週ぶんの数Ⅲ問題集12問」は死守。'},
+  {id:'q3', from:[9,28], to:[10,4], label:'9/28〜10/4',
+   tags:[{t:'🔁 平面上の曲線',c:'tetsu'},{t:'前期復習ラスト',c:'free'}],
+   alert:'<strong>前期数Ⅲ復習はこの週で完了させる。</strong>平面上の曲線 第17・18回で指定★9題。土日に振ってあるので、平日はいつもの週テンプレに戻してよい。'},
+  {id:'q4', from:[10,5], to:[10,11], label:'10/5〜10/11',
+   tags:[{t:'🧮 ドリル滞留消化',c:'takeda'},{t:'通常運転',c:'free'}],
+   alert:'<strong>ここから通常の週グリッドに戻す。</strong>溜まっている計算ドリル6周分を水・日で1周ずつ消化していく。模試の大問②は計算テストの内容から出るので、これがいちばん分かりやすい得点源。'},
+  {id:'q5', from:[10,12], to:[10,18], label:'10/12〜10/18',
+   tags:[{t:'🧮 ドリル滞留消化',c:'takeda'},{t:'鉄緑週',c:'tetsu'}],
+   alert:'ドリル滞留の消化を継続（4/6・5/6）。新規分は毎朝15分、滞留分とは混ぜない。5週に1回の総復習テストが来る週は、前週の日曜をまるごと総復習に振り替える。'},
+  {id:'q6', from:[10,19], to:[10,25], label:'10/19〜10/25',
+   tags:[{t:'🧮 ドリル完走',c:'takeda'}],
+   alert:'<strong>10/21で計算ドリルの滞留6周が片づく。</strong>ここから先は新規分だけを毎朝回す状態に戻せる。部活引退が近いので、11月からの枠の使い方を決めておく。'},
+  {id:'q7', from:[10,26], to:[11,1], label:'10/26〜11/1',
+   tags:[{t:'🎽 部活引退',c:'event'},{t:'切りかえ週',c:'exam'}],
+   alert:'<strong>10月末で部活引退。</strong>火・木の放課後が空くので、11月からそこに理科1周目と英語の精読を入れる。12/20まで残り約7週、ここからが本番。'},
+  {id:'q8', from:[11,2], to:[11,8], label:'11/2〜11/8',
+   tags:[{t:'🧪 理科1周目',c:'chem'},{t:'📖 精読再開',c:'eng'}],
+   alert:'<strong>引退後の新しい週。</strong>火＝理科1周目、木＝英語精読を追加。数Ⅲと鉄緑数学の優先順位は変えない。増えた枠は「今まで削っていたもの」を戻すために使う。'},
+  {id:'q9', from:[11,9], to:[11,15], label:'11/9〜11/15',
+   tags:[{t:'🧪 理科1周目',c:'chem'},{t:'鉄緑週',c:'tetsu'}],
+   alert:'理科1周目を進めつつ、数Ⅲは問題集を落とさない。英語は精読を週2〜3本に増やせるなら増やす（武田の日割りは削らない）。'},
+  {id:'q10', from:[11,16], to:[11,22], label:'11/16〜11/22',
+   tags:[{t:'数Ⅲ 総ざらい開始',c:'exam'}],
+   alert:'<strong>模試まで約1か月。</strong>数Ⅲは新規消化から「前期＋後期の総ざらい」に軸足を移す時期。確認シリーズと例題を、解かずに立式だけ確認する回し方に切り替えると速い。'},
+  {id:'q11', from:[11,23], to:[11,29], label:'11/23〜11/29',
+   tags:[{t:'数Ⅲ 総ざらい',c:'exam'},{t:'英語 記述',c:'eng'}],
+   alert:'英語は和訳・英作文の記述力に寄せる。前回の校内模試は英語55点で平均をやや下回ったので、点を取りに行くのはここ。数Ⅲの総ざらいと並走。'},
+  {id:'q12', from:[11,30], to:[12,6], label:'11/30〜12/6',
+   tags:[{t:'📝 実戦演習',c:'exam'}],
+   alert:'<strong>残り3週。</strong>時間を計って通しで解く練習に入る。平均40点台の難しいテストなので、全部解こうとせず「取れる大問から埋める」順番を決めておく。'},
+  {id:'q13', from:[12,7], to:[12,13], label:'12/7〜12/13',
+   tags:[{t:'📝 実戦演習',c:'exam'},{t:'弱点つぶし',c:'tetsu'}],
+   alert:'この週で弱点を確定させて、残り1週は確定した穴だけを埋める。図形系（図形の性質・平面ベクトル）は「立式のためらい」が原因なので、座標かベクトルで置く手順を手に覚えさせる。'},
+  {id:'q14', from:[12,14], to:[12,20], label:'12/14〜12/20 🔴',
+   tags:[{t:'🔴🔴 クリスマス模試',c:'exam'},{t:'最終週',c:'event'}],
+   alert:'<strong>12/20（日）第2回校内模試。</strong>高3のクラスが英語・数学それぞれで決まる、人生最後の校内模試。新しいことはやらない。前日は早寝。終わったら阿智村。'},
+];
+
+NEWP.forEach(ph=>{
+  const days=[];
+  const start=mkd(ph.from[0],ph.from[1]), end=mkd(ph.to[0],ph.to[1]);
+  for(let dt=new Date(start); dt<=end; dt.setDate(dt.getDate()+1)){
+    const cur=new Date(dt);
+    const ov=OVERRIDE[mdOf(cur)]||{};
+    const club = cur < CLUB_END;
+    let secs;
+    if(ov.replace){
+      secs = ov.replace.map(s=>({title:s.title, items:s.items.map(i=>({...i}))}));
+    }else{
+      secs = weekTemplate(cur.getDay(), club).map(s=>({title:s.title, items:s.items.map(i=>({...i}))}));
+      if(ov.extra) secs = secs.concat(ov.extra.map(s=>({title:s.title, items:s.items.map(i=>({...i}))})));
+    }
+    const dow=cur.getDay();
+    days.push({
+      id: idOf(cur),
+      label: LBL[dow],
+      date: dateLabel(cur) + (ov.mark||''),
+      type: ov.type || (dow===0||dow===6 ? 'weekend' : 'weekday'),
+      noAuto: !!ov.noAuto,
+      sections: secs,
+    });
+  }
+  ph.days=days;
+  PHASES.push(ph);
+});
+
+// ─────────────────────────────────────────────
+// 自動挿入
+// ─────────────────────────────────────────────
+function injectLegacy(day){
+  // 6〜8月ぶん。旧キーとの対応を壊さないよう、当時のロジックのまま残す
+  const skipTakeda = ['d0703','d0704','d0705','d0706','d0708','d0719','d0728','d0729','d0802','d0819'].includes(day.id)
+    || day.id.startsWith('d08') && !['d0802','d0803','d0809','d0810','d0817','d0818','d0819'].includes(day.id);
+  const skipDrill = ['d0729'].includes(day.id);
+  if(!skipDrill){
+    day.sections = [{
+      title:'🌅 毎朝タスク（起きたらすぐ・スマホより先）',
+      items:[
+        {cat:'math',text:'数Ⅲ 計算ドリル 1枚目',sub:'起きてすぐ。頭が動く前でもできる'},
+        {cat:'math',text:'数Ⅲ 計算ドリル 2枚目',sub:'8/19までに111枚完走するために毎朝2枚'},
+      ]
+    }, ...day.sections];
+  }
+  const isTakedaClass = ['d0606','d0613','d0620','d0627','d0704','d0711','d0718','d0725'].includes(day.id);
+  if(!skipTakeda && !isTakedaClass){
+    day.sections = [...day.sections, {
+      title:'📘 武田 毎日タスク',
+      items:[
+        {cat:'eng', text:'英検準1級ワークブック：今日の範囲',sub:'t1またはt2（武田の日次表を確認）'},
+        {cat:'eng', text:'英検単熟語EX：ターゲット1-600（今日の100語）',sub:'6/13:1-100, 6/14:101-200, 6/15:201-300, 6/16:301-400, 6/17:401-500, 6/18:501-600'},
+        {cat:'eng', text:'速読英熟語：今日の範囲（2〜3ページ）',sub:'📖 電車の中で。52〜63番'},
+        {cat:'eng', text:'Vintage：1〜4章（今日の章）',sub:'文法→語法の順で'},
+        {cat:'math',text:'合格る計算 数Ⅲ：73〜78番（今日の1問）',sub:'⏰ 計算ドリル2枚の直後にそのままやる'},
+        {cat:'math',text:'合格る計算 1A2B：item42・43・44・47（今日の指定）',sub:'武田の日次表を確認'},
+        {cat:'math',text:'合格る計算 1A2B or 基礎問精講（今日の指定分）',sub:'武田の日次表を確認'},
+      ]
+    }];
+  } else if(isTakedaClass){
+    day.sections = [...day.sections, {
+      title:'📘 武田 毎日タスク（授業日）',
+      items:[
+        {cat:'eng', text:'ターゲット1900：今日の範囲 100語確認',sub:''},
+        {cat:'eng', text:'英検準1級ワークブック：今日の範囲',sub:'t1またはt2'},
+        {cat:'eng', text:'英検単熟語EX：今日の100語',sub:''},
+        {cat:'eng', text:'速読英熟語：今日の範囲',sub:'📖 電車の中で'},
+        {cat:'eng', text:'Vintage：今日の章',sub:''},
+        {cat:'math',text:'合格る計算 数Ⅲ：今日の1問',sub:'⏰ 計算ドリルの直後に'},
+        {cat:'takeda',text:'武田 授業後：次回宿題の内容をメモ・確認',sub:'日次スケジュール表と照合する'},
+      ]
+    }];
+  }
+}
+
+function injectCurrent(day){
+  // 毎朝：新規分の計算ドリルだけ。滞留分は例外日に別枠で置いてある
+  day.sections = [{
+    title:'🌅 毎朝タスク（起きたらすぐ・スマホより先）',
+    items:[
+      {cat:'math',text:'計算ドリル 新規分（15分）',sub:'その日のぶんはその日に。滞留6周分とは混ぜない'},
+    ]
+  }, ...day.sections];
+
+  const isTakedaClass = day.label==='FRI';
+  day.sections = [...day.sections, isTakedaClass ? {
+    title:'📘 武田 毎日タスク（授業日・軽量版）',
+    items:[
+      {cat:'eng', text:'英検準1級単熟語EX：今日の100語',sub:''},
+      {cat:'eng', text:'ターゲット1900：今日の範囲',sub:''},
+      {cat:'eng', text:'速読英熟語：今日の範囲',sub:'📖 電車の中で'},
+      {cat:'eng', text:'Vintage：今日の章',sub:''},
+    ]
+  } : {
+    title:'📘 武田 毎日タスク',
+    items:[
+      {cat:'eng', text:'英検準1級単熟語EX：今日の100語',sub:'日次表の範囲（例：1401-1800を6日割り）'},
+      {cat:'eng', text:'ターゲット1900：今日の範囲',sub:'全範囲まわし'},
+      {cat:'eng', text:'速読英熟語：今日の範囲',sub:'📖 電車の中で'},
+      {cat:'eng', text:'Vintage：今日の章',sub:'文法→語法の順で'},
+      {cat:'phys',text:'良問の風 物理：今日の範囲',sub:'武田の日次表を確認'},
+    ]
+  }];
+}
+
 // ─────────────────────────────────────────────
 // STORAGE
+// 旧 v2 キーは「その日の中で何番目か」でチェックを覚えていたので、
+// 項目を1つ足すだけで以降が全部ズレ、履歴が消えたように見えていた。
+// v3 は項目の中身から作る固定キーなので、追加・並べ替えの影響を受けない。
 // ─────────────────────────────────────────────
-function sk(did, idx){ return `v2_${did}_${idx}`; }
-function isChk(did, idx){ try{ return localStorage.getItem(sk(did,idx))==='1'; }catch(e){return false;} }
-function setChk(did, idx, v){ try{ localStorage.setItem(sk(did,idx), v?'1':'0'); }catch(e){} }
+function hash36(s){
+  let h=0x811c9dc5;
+  for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; }
+  return h.toString(36);
+}
+function assignIds(day){
+  const seen=Object.create(null);
+  let pos=0;
+  day.sections.forEach(sec=>sec.items.forEach(item=>{
+    const base=hash36(sec.title+' '+item.text);
+    const n=seen[base]=(seen[base]||0)+1;
+    item._uid = n>1 ? base+'~'+n : base;
+    item._pos = pos++;            // 旧キーとの対応。移行のときだけ使う
+  }));
+}
+function sk(day, item){ return 'v3_'+day.id+'_'+item._uid; }
+function isChk(day, item){ try{ return localStorage.getItem(sk(day,item))==='1'; }catch(e){ return false; } }
+function setChk(day, item, v){ try{ localStorage.setItem(sk(day,item), v?'1':'0'); }catch(e){} }
+
+const MIGRATED_FLAG='v3_migrated';
+function migrateFromV2(){
+  try{ if(localStorage.getItem(MIGRATED_FLAG)==='1') return; }catch(e){ return; }
+  try{
+    PHASES.forEach(ph=>ph.days.forEach(day=>{
+      day.sections.forEach(sec=>sec.items.forEach(item=>{
+        const nk=sk(day,item);
+        if(localStorage.getItem(nk)!==null) return;   // 新キーが既にあるなら触らない
+        const old=localStorage.getItem('v2_'+day.id+'_'+item._pos);
+        if(old!==null) localStorage.setItem(nk, old);
+      }));
+    }));
+    localStorage.setItem(MIGRATED_FLAG,'1');
+  }catch(e){}
+}
+
+// 旧キーは消さずに残してある（保険）。
+function prepareAll(){
+  PHASES.forEach(ph=>ph.days.forEach(day=>{
+    if(!day._prepped){
+      if(!day.noAuto){ ph.legacy ? injectLegacy(day) : injectCurrent(day); }
+      day._prepped=true;
+    }
+    assignIds(day);
+  }));
+  migrateFromV2();
+}
+
+// ─────────────────────────────────────────────
+// バックアップ
+// ─────────────────────────────────────────────
+function collectAll(){
+  const out={};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k && (k.startsWith('v2_')||k.startsWith('v3_'))) out[k]=localStorage.getItem(k);
+    }
+  }catch(e){}
+  return out;
+}
+function wireBackup(){
+  const ta=document.getElementById('bk-ta');
+  const msg=document.getElementById('bk-msg');
+  document.getElementById('bk-out').onclick=()=>{
+    const data=collectAll();
+    ta.value=JSON.stringify(data);
+    msg.textContent=Object.keys(data).length+'件を書き出した。このテキストをどこかに保存しておく。';
+  };
+  document.getElementById('bk-in').onclick=()=>{
+    let data;
+    try{ data=JSON.parse(ta.value); }
+    catch(e){ msg.textContent='読み込めなかった。書き出したテキストをそのまま貼りつける。'; return; }
+    if(!data || typeof data!=='object'){ msg.textContent='形式が違う。'; return; }
+    let n=0;
+    try{ Object.keys(data).forEach(k=>{ localStorage.setItem(k, data[k]); n++; }); }catch(e){}
+    msg.textContent=n+'件を書き戻した。画面を作り直す。';
+    buildAll();
+  };
+}
 
 // ─────────────────────────────────────────────
 // RENDER
@@ -1337,14 +1731,35 @@ function setChk(did, idx, v){ try{ localStorage.setItem(sk(did,idx), v?'1':'0');
 const phaseTabsEl = document.getElementById('phase-tabs');
 const phasePanelsEl = document.getElementById('phase-panels');
 
+// 今日が含まれるフェーズを最初から開く
+const PHASE_END = {p1:[6,7],p2:[6,14],p3:[6,21],p4:[7,5],p5:[7,19],p6:[8,19]};
+function activePhaseIndex(){
+  const now=new Date(); now.setHours(0,0,0,0);
+  for(let i=0;i<PHASES.length;i++){
+    const ph=PHASES[i];
+    const e = ph.to ? mkd(ph.to[0],ph.to[1]) : (PHASE_END[ph.id] ? mkd(PHASE_END[ph.id][0],PHASE_END[ph.id][1]) : null);
+    if(e && now<=e) return i;
+  }
+  return PHASES.length-1;
+}
+
+function countDay(day){
+  let total=0, done=0;
+  day.sections.forEach(sec=>sec.items.forEach(item=>{
+    total++;
+    if(isChk(day,item)) done++;
+  }));
+  return {total, done};
+}
+
 function buildAll(){
   phaseTabsEl.innerHTML='';
   phasePanelsEl.innerHTML='';
+  const activeIdx = activePhaseIndex();
 
   PHASES.forEach((ph,pi)=>{
-    // phase tab
     const ptab = document.createElement('button');
-    ptab.className='ptab'+(pi===0?' active':'');
+    ptab.className='ptab'+(pi===activeIdx?' active':'');
     ptab.textContent=ph.label;
     ptab.onclick=()=>{
       document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
@@ -1353,13 +1768,12 @@ function buildAll(){
       document.getElementById('pp_'+ph.id).classList.add('active');
     };
     phaseTabsEl.appendChild(ptab);
+    if(pi===activeIdx) setTimeout(()=>{ try{ ptab.scrollIntoView({inline:'center',block:'nearest'}); }catch(e){} },0);
 
-    // phase panel
     const pPanel = document.createElement('div');
-    pPanel.className='pphase'+(pi===0?' active':'');
+    pPanel.className='pphase'+(pi===activeIdx?' active':'');
     pPanel.id='pp_'+ph.id;
 
-    // week header
     const whdDiv = document.createElement('div');
     whdDiv.className='week-hd';
     whdDiv.innerHTML=`
@@ -1374,20 +1788,12 @@ function buildAll(){
     pPanel.appendChild(alertDiv);
 
     // ── フェーズ（週）進捗バー ──
+    let phTotal=0, phDone=0;
+    ph.days.forEach(d=>{ const c=countDay(d); phTotal+=c.total; phDone+=c.done; });
+    const phPct = phTotal? Math.round(phDone/phTotal*100):0;
     const phProgWrap = document.createElement('div');
     phProgWrap.className='phase-prog-wrap';
     phProgWrap.id='phase-prog-'+ph.id;
-    // 初期値計算
-    let phTotal=0, phDone=0;
-    ph.days.forEach(d=>{
-      let gi2=0;
-      d.sections.forEach(sec=>sec.items.forEach(()=>{
-        phTotal++;
-        if(isChk(d.id,gi2)) phDone++;
-        gi2++;
-      }));
-    });
-    const phPct = phTotal? Math.round(phDone/phTotal*100):0;
     phProgWrap.innerHTML=`
       <div class="phase-prog-row">
         <span class="phase-prog-label">このフェーズの進捗</span>
@@ -1398,66 +1804,7 @@ function buildAll(){
     pPanel.appendChild(phProgWrap);
 
     ph.days.forEach(day=>{
-      // 武田 毎日宿題を自動挿入（武田授業日・旅行・模試当日は除外）
-      const skipTakeda = ['d0703','d0704','d0705','d0706','d0708','d0719','d0728','d0729','d0802','d0819'].includes(day.id)
-        || day.id.startsWith('d08') && !['d0802','d0803','d0809','d0810','d0817','d0818','d0819'].includes(day.id);
-
-      // 旅行日以外は毎朝計算ドリル2枚を先頭に挿入
-      const skipDrill = ['d0729'].includes(day.id);
-      if(!skipDrill){
-        const drillSection = {
-          title:'🌅 毎朝タスク（起きたらすぐ・スマホより先）',
-          items:[
-            {cat:'math',text:'数Ⅲ 計算ドリル 1枚目',sub:'起きてすぐ。頭が動く前でもできる'},
-            {cat:'math',text:'数Ⅲ 計算ドリル 2枚目',sub:'8/19までに111枚完走するために毎朝2枚'},
-          ]
-        };
-        day.sections = [drillSection, ...day.sections];
-      }
-
-      // 武田授業日（金）は別セクションがあるので宿題セクションだけ追加
-      const isTakedaClass = ['d0606','d0613','d0620','d0627','d0704','d0711','d0718','d0725'].includes(day.id);
-
-      if(!skipTakeda && !isTakedaClass){
-        // 武田 毎日タスクセクションを末尾に追加
-        const takedaDaily = {
-          title:'📘 武田 毎日タスク',
-          items:[
-            {cat:'eng', text:'英検準1級ワークブック：今日の範囲',sub:'t1またはt2（武田の日次表を確認）'},
-            {cat:'eng', text:'英検単熟語EX：ターゲット1-600（今日の100語）',sub:'6/13:1-100, 6/14:101-200, 6/15:201-300, 6/16:301-400, 6/17:401-500, 6/18:501-600'},
-            {cat:'eng', text:'速読英熟語：今日の範囲（2〜3ページ）',sub:'📖 電車の中で。52〜63番'},
-            {cat:'eng', text:'Vintage：1〜4章（今日の章）',sub:'文法→語法の順で'},
-            {cat:'math',text:'合格る計算 数Ⅲ：73〜78番（今日の1問）',sub:'⏰ 計算ドリル2枚の直後にそのままやる'},
-            {cat:'math',text:'合格る計算 1A2B：item42・43・44・47（今日の指定）',sub:'武田の日次表を確認'},
-            {cat:'math',text:'合格る計算 1A2B or 基礎問精講（今日の指定分）',sub:'武田の日次表を確認'},
-          ]
-        };
-        day.sections = [...day.sections, takedaDaily];
-      } else if(isTakedaClass){
-        // 武田授業日は宿題受け取り＋毎日タスクの軽量版
-        const takedaClassDay = {
-          title:'📘 武田 毎日タスク（授業日）',
-          items:[
-            {cat:'eng', text:'ターゲット1900：今日の範囲 100語確認',sub:''},
-            {cat:'eng', text:'英検準1級ワークブック：今日の範囲',sub:'t1またはt2'},
-            {cat:'eng', text:'英検単熟語EX：今日の100語',sub:''},
-            {cat:'eng', text:'速読英熟語：今日の範囲',sub:'📖 電車の中で'},
-            {cat:'eng', text:'Vintage：今日の章',sub:''},
-            {cat:'math',text:'合格る計算 数Ⅲ：今日の1問',sub:'⏰ 計算ドリルの直後に'},
-            {cat:'takeda',text:'武田 授業後：次回宿題の内容をメモ・確認',sub:'日次スケジュール表と照合する'},
-          ]
-        };
-        day.sections = [...day.sections, takedaClassDay];
-      }
-
-      // count items for this day
-      const total = day.sections.reduce((s,sec)=>s+sec.items.length,0);
-      let done = 0;
-      let globalIdx=0;
-      day.sections.forEach(sec=>sec.items.forEach((_,i)=>{
-        if(isChk(day.id, globalIdx)) done++;
-        globalIdx++;
-      }));
+      const {total, done} = countDay(day);
 
       const card = document.createElement('div');
       card.className='day-card';
@@ -1484,29 +1831,13 @@ function buildAll(){
       const dayHd = card.querySelector('.day-hd');
       const dayBody = card.querySelector('.day-body');
 
-      // build sections inside body
       day.sections.forEach(sec=>{
         const secDiv = document.createElement('div');
         secDiv.className='dsec';
         secDiv.innerHTML=`<div class="dsec-title">${sec.title}</div>`;
         sec.items.forEach(item=>{
-          const itemDiv = document.createElement('div');
-          // we need a stable index per day
-          itemDiv.dataset.dayid = day.id;
-          secDiv.appendChild(itemDiv);
-        });
-        dayBody.appendChild(secDiv);
-      });
-
-      // now assign indices and bind
-      let gi=0;
-      dayBody.querySelectorAll('.dsec').forEach((secEl,si)=>{
-        const sec = day.sections[si];
-        const itemEls = secEl.querySelectorAll('[data-dayid]');
-        sec.items.forEach((item,ii)=>{
-          const idx = gi++;
-          const chk = isChk(day.id, idx);
-          const el = itemEls[ii];
+          const el = document.createElement('div');
+          const chk = isChk(day,item);
           el.className='todo'+(chk?' checked':'');
           el.innerHTML=`
             <div class="dot ${item.cat}"></div>
@@ -1519,11 +1850,13 @@ function buildAll(){
           el.onclick=()=>{
             const now = !el.classList.contains('checked');
             el.classList.toggle('checked',now);
-            setChk(day.id, idx, now);
+            setChk(day, item, now);
             updateDayProg(card, day);
             updateGlobalProg();
           };
+          secDiv.appendChild(el);
         });
+        dayBody.appendChild(secDiv);
       });
 
       dayHd.onclick=(e)=>{
@@ -1541,12 +1874,7 @@ function buildAll(){
 }
 
 function updateDayProg(card, day){
-  let total=0, done=0, gi=0;
-  day.sections.forEach(sec=>sec.items.forEach(()=>{
-    total++;
-    if(isChk(day.id,gi)) done++;
-    gi++;
-  }));
+  const {total, done} = countDay(day);
   const pct = total? Math.round(done/total*100):0;
   card.querySelector('.day-prog').textContent=`${done}/${total}`;
   const fill = card.querySelector('.day-prog-bar-fill');
@@ -1558,14 +1886,10 @@ function updateGlobalProg(){
   PHASES.forEach(ph=>{
     let phTotal=0, phDone=0;
     ph.days.forEach(day=>{
-      let gi=0;
-      day.sections.forEach(sec=>sec.items.forEach(()=>{
-        total++; phTotal++;
-        if(isChk(day.id,gi)){ done++; phDone++; }
-        gi++;
-      }));
+      const c=countDay(day);
+      phTotal+=c.total; phDone+=c.done;
     });
-    // update phase bar
+    total+=phTotal; done+=phDone;
     const pct=phTotal?Math.round(phDone/phTotal*100):0;
     const fill=document.getElementById('phase-prog-fill-'+ph.id);
     const nums=document.getElementById('phase-prog-nums-'+ph.id);
@@ -1578,7 +1902,21 @@ function updateGlobalProg(){
   document.getElementById('hd-pct').textContent=pct+'%';
 }
 
+// 模試までの残り日数
+function updateCountdown(){
+  const el=document.getElementById('dday');
+  if(!el) return;
+  const now=new Date(); now.setHours(0,0,0,0);
+  const exam=mkd(12,20);
+  const diff=Math.round((exam-now)/86400000);
+  el.textContent = diff>0 ? ('あと'+diff+'日') : (diff===0 ? '今日が本番' : '模試おつかれさま');
+}
+
+prepareAll();
 buildAll();
+wireBackup();
+updateCountdown();
 </script>
 </body>
 </html>
+
