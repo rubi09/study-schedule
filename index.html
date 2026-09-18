@@ -129,6 +129,12 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 .bk textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;padding:8px;resize:vertical}
 .bk textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .bk-msg{font-size:10.5px;color:var(--done);min-height:14px;line-height:1.5}
+
+/* 過去フェーズの表示切りかえ */
+.legacy-row{display:flex;justify-content:flex-end;margin-bottom:8px}
+.legacy-row button{background:none;border:1px solid var(--border);color:var(--muted);border-radius:14px;padding:4px 12px;font-size:10.5px;font-family:inherit;cursor:pointer;letter-spacing:.04em;transition:all .15s}
+.legacy-row button:hover{background:var(--surface2);color:var(--text)}
+.legacy-row button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -136,7 +142,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 <div class="hd">
   <div class="hd-left">
     <h1>STUDY PLAN</h1>
-    <p>東大理一 ／ 6月〜12/20 クリスマス模試</p>
+    <p>東大理一 ／ 12/20 クリスマス模試</p>
   </div>
   <div class="hd-right">
     <strong id="hd-pct">0%</strong>
@@ -167,6 +173,8 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
     <p class="bk-msg" id="bk-msg"></p>
   </div>
 </details>
+
+<div class="legacy-row"><button type="button" id="legacy-toggle">6〜8月も表示する</button></div>
 
 <div class="phase-tabs" id="phase-tabs"></div>
 <div id="phase-panels"></div>
@@ -1401,7 +1409,7 @@ function weekTemplate(dow, club){
     case 4: return [ // 木
       {title:'📚 鉄緑 数Ⅲ（授業）',items:[
         {cat:'tetsu',text:'鉄緑 数Ⅲ 授業',sub:''},
-        {cat:'math',text:'当日の例題を復習',sub:''},
+        {cat:'math',text:'テキスト 例題7題＋練習問題3題',sub:'授業当日のうちに。1時間で回せる分量'},
       ]},
       ...(club ? [clubSec] : [{title:'🌙 引退後の空き枠',items:[
         {cat:'eng',text:'英語 精読 1本',sub:'構文把握。11月から'},
@@ -1731,16 +1739,32 @@ function wireBackup(){
 const phaseTabsEl = document.getElementById('phase-tabs');
 const phasePanelsEl = document.getElementById('phase-panels');
 
+// 6〜8月ぶんは既定で隠す（データは消さない。進捗の分母からも外れる）
+const SHOW_LEGACY_KEY='show_legacy';
+function showLegacy(){ try{ return localStorage.getItem(SHOW_LEGACY_KEY)==='1'; }catch(e){ return false; } }
+function visiblePhases(){ return showLegacy() ? PHASES : PHASES.filter(p=>!p.legacy); }
+
 // 今日が含まれるフェーズを最初から開く
 const PHASE_END = {p1:[6,7],p2:[6,14],p3:[6,21],p4:[7,5],p5:[7,19],p6:[8,19]};
-function activePhaseIndex(){
+function activePhaseIndex(list){
   const now=new Date(); now.setHours(0,0,0,0);
-  for(let i=0;i<PHASES.length;i++){
-    const ph=PHASES[i];
+  for(let i=0;i<list.length;i++){
+    const ph=list[i];
     const e = ph.to ? mkd(ph.to[0],ph.to[1]) : (PHASE_END[ph.id] ? mkd(PHASE_END[ph.id][0],PHASE_END[ph.id][1]) : null);
     if(e && now<=e) return i;
   }
-  return PHASES.length-1;
+  return list.length-1;
+}
+function wireLegacyToggle(){
+  const btn=document.getElementById('legacy-toggle');
+  if(!btn) return;
+  const paint=()=>{ btn.textContent = showLegacy() ? '6〜8月を隠す' : '6〜8月も表示する'; };
+  paint();
+  btn.onclick=()=>{
+    try{ localStorage.setItem(SHOW_LEGACY_KEY, showLegacy()?'0':'1'); }catch(e){}
+    paint();
+    buildAll();
+  };
 }
 
 function countDay(day){
@@ -1755,9 +1779,10 @@ function countDay(day){
 function buildAll(){
   phaseTabsEl.innerHTML='';
   phasePanelsEl.innerHTML='';
-  const activeIdx = activePhaseIndex();
+  const list = visiblePhases();
+  const activeIdx = activePhaseIndex(list);
 
-  PHASES.forEach((ph,pi)=>{
+  list.forEach((ph,pi)=>{
     const ptab = document.createElement('button');
     ptab.className='ptab'+(pi===activeIdx?' active':'');
     ptab.textContent=ph.label;
@@ -1883,7 +1908,7 @@ function updateDayProg(card, day){
 
 function updateGlobalProg(){
   let total=0,done=0;
-  PHASES.forEach(ph=>{
+  visiblePhases().forEach(ph=>{
     let phTotal=0, phDone=0;
     ph.days.forEach(day=>{
       const c=countDay(day);
@@ -1915,8 +1940,8 @@ function updateCountdown(){
 prepareAll();
 buildAll();
 wireBackup();
+wireLegacyToggle();
 updateCountdown();
 </script>
 </body>
 </html>
-
