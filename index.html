@@ -78,7 +78,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 .todo-left{display:flex;flex-direction:column;gap:2px;flex:1}
 .todo-text{font-size:12.5px;line-height:1.45}
 .todo-sub{font-size:10.5px;color:var(--muted)}
-.ttime{display:inline-block;font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.03em;margin-right:7px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ttime{display:inline-block;font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.03em;margin-right:7px;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;border-radius:4px;padding:1px 4px;margin-left:-4px}
+.ttime:hover{background:var(--surface2)}
+.ttime.empty{color:var(--muted);font-weight:400;opacity:.6}
 .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
 .dot.math{background:var(--math)}.dot.phys{background:var(--phys)}.dot.chem{background:var(--chem)}
 .dot.eng{background:var(--eng)}.dot.exam{background:var(--exam)}.dot.event{background:var(--event)}
@@ -1460,12 +1462,15 @@ const OVERRIDE = {
     {cat:'math',text:'積分(6) 第13回 指定 ★3・7・9・13',sub:''},
     {cat:'math',text:'第11〜13回の例題を通す',sub:'積分はここで終わらせる'},
   ]}]},
-  '9/26':{extra:[{title:'🔁 前期数Ⅲ復習',items:[
+  '9/26':{extra:[{title:'🔁 前期数Ⅲ復習（最優先）',items:[
     {cat:'math',t:'19:50–22:30',text:'複素数平面(1) 第14回 指定 ★3・5・6・10（♥11）',sub:''},
     {cat:'math',text:'複素数平面(2) 第15回 指定 ★1・7・8・9',sub:''},
   ]}]},
-  '9/27':{extra:[{title:'🔁 前期数Ⅲ復習',items:[
+  '9/27':{extra:[{title:'🔁 前期数Ⅲ復習（最優先・ここで前期複素数を終わらせる）',items:[
     {cat:'math',t:'9:30–16:00',text:'複素数平面(3) 第16回 指定 ★1・4・5・11（♥10）',sub:''},
+  ]},{title:'↳ 金曜からの持ち越し',items:[
+    {cat:'math',text:'数Ⅲ テキスト 例題7題＋練習問題3題',sub:''},
+    {cat:'phys',text:'良問の風 5題',sub:''},
   ]}]},
   '10/3':{extra:[{title:'🔁 前期数Ⅲ復習（残り）',items:[
     {cat:'math',t:'19:50–22:30',text:'平面上の曲線(1) 第17回 指定 ★6・9・12',sub:'3題'},
@@ -1473,7 +1478,13 @@ const OVERRIDE = {
   '10/4':{extra:[{title:'🔁 前期数Ⅲ復習（残り）',items:[
     {cat:'math',t:'9:30–16:00',text:'平面上の曲線(2) 第18回 指定 ★6・7・8・11・14・16',sub:'6題。これで前期復習は完了'},
   ]}]},
-  '10/30':{extra:[{title:'🧮 節目',items:[{cat:'math',t:'',text:'計算ドリル 滞留42枚 完走',sub:'9/19から1日1枚。ここから先は新規分だけを回せばいい'}]}]},
+  '9/25':{extra:[{title:'🔁 リカバリー（9/20〜23 出かけてて停止）',items:[
+    {cat:'math',t:'',text:'例題7題＋練習問題3題、良問の風5題は週末に持ち越し',sub:'今日は武田だけでいい'},
+  ]}]},
+  '9/30':{extra:[{title:'🔁 水の穴埋め',items:[
+    {cat:'phys',t:'',text:'良問の風は今回だけ休み',sub:'今週ぶんの数Ⅲ問題集12問に集中する枠として使う'},
+  ]}]},
+  '11/1':{extra:[{title:'🧮 節目',items:[{cat:'math',t:'',text:'計算ドリル 滞留 完走（目標）',sub:'9/19開始・9/20〜23の遅れで2日スライド。ここから先は新規分だけ'}]}]},
   '10/31':{extra:[{title:'🎽 節目',items:[
     {cat:'event',text:'部活 引退（10月末）',sub:'火・木の放課後がここから空く。11月が勝負どころ'},
   ]}]},
@@ -1618,12 +1629,12 @@ function injectLegacy(day){
 
 function injectCurrent(day){
   const dow = day.label;
-  // 滞留42枚は 9/19 から1日1枚で 10/30 に完走する。それ以降は新規分だけ
-  const backlog = day.id <= 'd1030';
+  // 滞留は 9/19 から1日1枚で消化。9/20〜23が4日止まったぶん、目標は10/30→11/1にスライド
+  const backlog = day.id <= 'd1101';
   const drill = [
     {cat:'math',t:'20分', text:'計算ドリル 新規分 1枚',sub:'週7枚＝ちょうど1周。ここを欠かすと負債がまた増える'},
   ];
-  if(backlog) drill.push({cat:'math',t:'20分', text:'計算ドリル 滞留分 1枚',sub:'42枚を1日1枚で完済。10/30 完走の計算'});
+  if(backlog) drill.push({cat:'math',t:'20分', text:'計算ドリル 滞留分 1枚',sub:'目標は11/1完済（9/20〜23止まったぶん2日スライド）'});
 
   // 学校の内職。武田の日割りはここで終わる（ターゲット1900は外した）
   if(dow!=='SUN'){
@@ -1685,6 +1696,11 @@ function assignIds(day){
 function sk(day, item){ return 'v3_'+day.id+'_'+item._uid; }
 function isChk(day, item){ try{ return localStorage.getItem(sk(day,item))==='1'; }catch(e){ return false; } }
 function setChk(day, item, v){ try{ localStorage.setItem(sk(day,item), v?'1':'0'); }catch(e){} }
+
+// 時刻の上書き。項目のuidにひもづくので、時刻を変えてもチェック履歴は壊れない
+function tk(day, item){ return 'v3t_'+day.id+'_'+item._uid; }
+function getTime(day, item){ try{ const v=localStorage.getItem(tk(day,item)); return v===null ? (item.t||'') : v; }catch(e){ return item.t||''; } }
+function setTime(day, item, v){ try{ if(v) localStorage.setItem(tk(day,item), v); else localStorage.removeItem(tk(day,item)); }catch(e){} }
 
 const MIGRATED_FLAG='v3_migrated';
 function migrateFromV2(){
@@ -1878,11 +1894,12 @@ function buildAll(){
           const el = document.createElement('div');
           const chk = isChk(day,item);
           el.className='todo'+(chk?' checked':'');
+          const curT = getTime(day,item);
           el.innerHTML=`
             <div class="dot ${item.cat}"></div>
             <div class="cb"><span class="cb-check">✓</span></div>
             <div class="todo-left">
-              <span class="todo-text">${item.t?`<span class="ttime">${item.t}</span>`:''}${item.text}</span>
+              <span class="todo-text"><span class="ttime${curT?'':' empty'}">${curT||'＋時刻'}</span>${item.text}</span>
               ${item.sub?`<span class="todo-sub">${item.sub}</span>`:''}
             </div>
           `;
@@ -1892,6 +1909,15 @@ function buildAll(){
             setChk(day, item, now);
             updateDayProg(card, day);
             updateGlobalProg();
+          };
+          const tEl = el.querySelector('.ttime');
+          tEl.onclick=(e)=>{
+            e.stopPropagation();
+            const v = prompt('時刻（例: 16:00–17:00）。空にすると消せる', curT);
+            if(v===null) return;
+            setTime(day, item, v.trim());
+            tEl.textContent = v.trim() || '＋時刻';
+            tEl.classList.toggle('empty', !v.trim());
           };
           secDiv.appendChild(el);
         });
